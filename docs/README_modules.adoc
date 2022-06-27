@@ -1,0 +1,20 @@
+== Ansible modules
+
+include::README_user.adoc[]
+
+include::README_group.adoc[]
+
+include::README_role.adoc[]
+
+include::README_props.adoc[]
+
+include::README_claimip.adoc[]
+
+include::README_ipprops.adoc[]
+
+include::README_dhcp.adoc[]
+
+include::README_zone.adoc[]
+
+include::README_dnsrecord.adoc[]
+

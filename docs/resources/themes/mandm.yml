@@ -1,0 +1,233 @@
+---
+extends: default
+merge: true
+font:
+  catalog:
+    # Free Font GNU (http://savannah.gnu.org/projects/freefont/)
+    # Sans Serif
+    FreeFont Sans:
+      normal: FreeSans.ttf
+      italic: FreeSansOblique.ttf
+      bold: FreeSansBold.ttf
+      bold_italic: FreeSansBoldOblique.ttf
+    # Serif
+    FreeFont Serif:
+      normal: FreeSerif.ttf
+      italic: FreeSerifItalic.ttf
+      bold: FreeSerifBold.ttf
+      bold_italic: FreeSerifBoldItalic.ttf
+    # Mono
+    FreeFont Mono:
+      normal: FreeMono.ttf
+      italic: FreeMonoOblique.ttf
+      bold: FreeMonoBold.ttf
+      bold_italic: FreeMonoBoldOblique.ttf
+    # Symbol
+    OpenSymbol:
+      "*": OpenSymbol.ttf
+    # M+ 1mn supports ASCII and the circled numbers used for conums
+    M+ 1mn:
+      normal: GEM_FONTS_DIR/mplus1mn-regular-subset.ttf
+      bold: GEM_FONTS_DIR/mplus1mn-bold-subset.ttf
+      italic: GEM_FONTS_DIR/mplus1mn-italic-subset.ttf
+      bold_italic: GEM_FONTS_DIR/mplus1mn-bold_italic-subset.ttf
+    # Default font for fallback
+    Noto Serif:
+      normal: GEM_FONTS_DIR/notoserif-regular-subset.ttf
+      bold: GEM_FONTS_DIR/notoserif-bold-subset.ttf
+      italic: GEM_FONTS_DIR/notoserif-italic-subset.ttf
+      bold_italic: GEM_FONTS_DIR/notoserif-bold_italic-subset.ttf
+
+base:
+  font-family: FreeFont Serif
+  font-size: 12
+  font-size-small: round($base-font-size * 0.85)
+  font-size-large: round($base-font-size * 1.25)
+  align: left
+
+heading:
+  font-family: FreeFont Sans
+
+page:
+  # Margins: top right bottom left
+  #
+  layout: portrait
+  margin: [2.20cm, 1.70cm, 2.20cm, 1.70cm]
+  margin-inner: 1.90cm
+  margin-outer: 1.50cm
+  size: A4
+
+link:
+  font-family: FreeFont Mono
+  font-color: #1253cc
+
+description-list:
+  term-font-color: #000000
+  term-spacing: 0.2
+
+outline_list:
+  item_spacing: 1
+  marker-font-color: #000000
+
+conum:
+  font-color: #323232
+  #font-size: round($base-font-size * 0.85)
+  #line-height: 1.0
+  # This gives inverse callouts (like: ❶ )
+  # For open callouts comment this line
+  #glyphs: \u2776-\u277f,\u24eb-\u24f4
+  glyphs: filled
+
+header:
+  height: 1.75cm
+  line-height: 0.0
+  border-color: #dddddd
+  recto:
+    right:
+      content: "{chapter-title}"
+    left:
+      content: "{document-title}"
+  verso:
+    left:
+      content: $header-recto-right-content
+    right:
+      content: $header-recto-left-content
+
+footer:
+  height: 1.75cm
+  line-height: 1
+  recto:
+    left:
+      content: "Version {revnumber}"
+    center:
+      content: "(C) {docyear} -- {organization}"
+    right:
+      content: "Page {page-number}"
+  verso:
+    left:
+      content: $footer-recto-right-content
+    center:
+      content: $footer-recto-center-content
+    right:
+      content: $footer-recto-left-content
+
+title-page:
+  align: center
+  font-family: FreeFont Sans
+  logo:
+    top: 10%
+    align: left
+    image: image:mandm.png[pdfwidth=10%]
+  title:
+    align: center
+    top: 40%
+    line-height: 1.2
+    font-color: #000000
+    font-style: bold
+  subtitle:
+    font-color: #999999
+    font-family: FreeFont Serif
+  authors:
+    font-style: bold
+    contents:
+      name_only: "{author}"
+      with_email: "{author} <{email}>"
+      with_url: "{url}[{author}]"
+  revision:
+    display: none
+    delimiter: " - "
+    font-color: #181818
+    margin-bottom: 10
+
+table:
+  caption:
+    align: center
+    side: bottom
+
+image:
+  caption:
+    align: inherit
+    side: bottom
+
+literal:
+  font-family: FreeFont Mono
+  font-color: #1111ff
+  font-size: round($base_font_size * 0.85)
+  caption:
+    align: inherit
+    side: bottom
+
+listing:
+  font-family: FreeFont Mono
+  font-color: #1111ff
+  font-size: round($base_font_size * 0.85)
+  caption:
+    align: left
+    side: bottom
+
+code:
+  font-family: FreeFont Mono
+  font-size: round($base_font_size * 0.85)
+  caption:
+    align: left
+    side: bottom
+
+role:
+  hfs:
+    # Small header, no number, not in TOC
+    font-family: FreeFont Sans
+    font-size: round($base_font_size * 1.25)
+    font-style: bold
+  hfl:
+    # Large header, no number, not in TOC
+    font-family: FreeFont Sans
+    font-size: round($base_font_size * 1.50)
+    font-style: bold
+  large:
+    font-size: round($base_font_size * 1.50)
+  small:
+    font-size: round($base_font_size * 0.8)
+  tiny:
+    font-size: round($base_font_size * 0.6)
+  red:
+    font-color: #ff0000
+  white:
+    font-color: #ffffff
+  cyan:
+    font-color: #00ffff
+  silver:
+    font-color: #c0c0c0
+  blue:
+    font-color: #0000ff
+  gray:
+    font-color: #808080
+  darkblue:
+    font-color: #0000a0
+  black:
+    font-color: #000000
+  lightblue:
+    font-color: #add8e6
+  orange:
+    font-color: #ffa500
+  purple:
+    font-color: #800080
+  brown:
+    font-color: #a52a2a
+  yellow:
+    font-color: #ffff00
+  maroon:
+    font-color: #800000
+  lime:
+    font-color: #00ff00
+  green:
+    font-color: #008000
+  magenta:
+    font-color: #ff00ff
+  olive:
+    font-color: #808000
+  reverse:
+    font-color: #ffffff
+    background-color: #000000
+  reverse-light:
+    font-color: #ffffff
+    background-color: #808080

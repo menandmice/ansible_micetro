@@ -1,0 +1,7 @@
+// All kind of special characters
+
+:dagger:   &#x2020;
+:ddagger:  &#x2021;
+:bullet:   &#x2022;
+:permille: &#x2030;
+:asterisk: &#x2217;

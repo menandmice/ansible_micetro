@@ -1,0 +1,35 @@
+---
+namespace: ansilabnl
+name: micetro
+version: 1.0.3
+readme: README.md
+authors:
+  - Ton Kersten <t.kersten@atcomputing.nl>
+description: Collection to manage the Men&Mice Micetro environment with Ansible
+# https://www.gnu.org/licenses/gpl-3.0-standalone.html
+license:
+  - GPL-3.0-only
+tags:
+  - men_and_mice
+  - micetro
+  - dns
+  - dhcp
+  - ipam
+  - ansible
+  - automation
+repository: https://github.com/ansilabnl/micetro
+homepage: https://menandmice.com/
+documentation: //github.com/ansilabnl/micetro/docs
+issues: https://github.com/ansilabnl/micetro/issues
+dependencies: {}
+build_ignore:
+  - a
+  - .tox
+  - play_tests
+  - docs
+  - '*.tar.gz'
+  - '*.tgz'
+  - micetro.yml
+  - ansible.cfg
+  - group_vars
+  - host_vars

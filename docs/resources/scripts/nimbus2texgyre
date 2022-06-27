@@ -1,0 +1,8 @@
+sed -i						\
+	-e 's/Nimbus Mono L/TeXGyreCursor/g'	\
+	-e 's/Nimbus Sans/TeXGyreHeros/g'	\
+	-e 's/Nimbus Sans L/TeXGyreHeros/g'	\
+	-e 's/Nimbus Roman/TeXGyreSchola/g'	\
+	$(find . -type f)
+
+exit

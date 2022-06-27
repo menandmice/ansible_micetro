@@ -1,0 +1,11 @@
+---
+plugin: ansilabnl.micetro.inventory
+mm_url: "http://web.mmdemo.net"
+mm_user: "ton"
+mm_password: "4ton!"
+
+# filters:
+#   - location: home
+
+ranges:
+  - 192.168.3.0/24

@@ -1,0 +1,108 @@
+== AsciiDoctor
+
+This documentations is generated with
+https://asciidoctor.org[Asciidoctor].
+
+When installing AsciiDoctor you need to make a decision to whether
+install it per single user, or install it system-wide. The default is to
+install it on a per user base, but to install it system-wide the
+`--no-user-install` install flag is required.
+
+== Fedora 31
+
+----
+yum -y install			\
+	ruby-devel			\
+	poppler-utils		\
+	GraphicsMagick		\
+	GraphicsMagick-c++	\
+	GraphicsMagick-devel
+yum -y install java-latest-openjdk-headless
+gem install --no-user-install asciidoctor
+gem install --no-user-install asciidoctor-pdf
+gem install --no-user-install prawn-gmagick
+gem install --no-user-install rouge
+gem install --no-user-install rghost
+gem install --no-user-install pygments.rb
+gem install --no-user-install hexapdf
+gem install --no-user-install asciimath
+gem install --no-user-install asciidoctor-diagram
+gem install --no-user-install asciidoctor-question
+gem install --no-user-install json
+gem install --no-user-install awesome_print
+gem install --no-user-install coderay
+gem install --no-user-install pygments.rb
+gem install --no-user-install thread_safe
+gem install --no-user-install epubcheck
+gem install --no-user-install kindlegen
+----
+
+== CentOS7
+
+----
+yum -y install centos-release-scl
+yum -y update
+yum -y install rh-ruby26-ruby
+yum -y install java-latest-openjdk-headless
+source /opt/rh/rh-ruby26/enable
+yum -y install				\
+	rh-ruby26-ruby-devel	\
+	poppler-utils			\
+	GraphicsMagick			\
+	GraphicsMagick-c++		\
+	GraphicsMagick-devel
+gem install --no-user-install asciidoctor
+gem install --no-user-install asciidoctor-pdf
+gem install --no-user-install prawn-gmagick
+gem install --no-user-install rouge
+gem install --no-user-install rghost
+gem install --no-user-install pygments.rb
+gem install --no-user-install hexapdf
+gem install --no-user-install asciimath
+gem install --no-user-install asciidoctor-diagram
+gem install --no-user-install asciidoctor-question
+gem install --no-user-install json
+gem install --no-user-install awesome_print
+gem install --no-user-install coderay
+gem install --no-user-install pygments.rb
+gem install --no-user-install thread_safe
+gem install --no-user-install epubcheck
+gem install --no-user-install kindlegen
+----
+
+== macOS (10.14 Mojave)
+
+with ruby 2.7.0 (via rbenv)
+
+----
+$ java -version
+java version "10.0.2" 2018-07-17
+Java(TM) SE Runtime Environment 18.3 (build 10.0.2+13)
+Java HotSpot(TM) 64-Bit Server VM 18.3 (build 10.0.2+13, mixed mode)
+----
+
+----
+$ cat > ~/bin/soffice <<\EOF
+#!/bin/sh
+
+exec /Applications/LibreOffice.app/Contents/MacOS/soffice "$@"
+EOF
+$ chmod +x ~/bin/soffice
+----
+
+----
+brew install graphicsmagick
+
+gem install asciidoctor
+gem install asciidoctor-pdf
+gem install prawn-gmagick
+gem install rouge
+gem install rghost
+gem install pygments.rb
+gem install hexapdf
+gem install asciimath
+gem install asciidoctor-diagram
+gem install asciidoctor-question
+----
+
+Java is needed for the Ditaa conversions

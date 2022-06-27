@@ -1,0 +1,33 @@
+=== ansilabnl.micetro.role
+
+Manage roles on Men&Mice Micetro
+
+==== Options
+
+- `descr`: Description of the role.
+- `groups`: List of groups to add to this role
+- `name`: (required) Name of the role to create, remove or modify.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+- `state`: Should the role exist or not. (`absent`, `present`)
+- `users`: List of users to add to this role
+
+==== Examples
+
+.Role example
+[source,yaml]
+----
+- name: Add the 'local' role
+  ansilabnl.micetro.role:
+    name: local
+    desc: A local role
+    state: present
+  mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Remove the 'local' role
+  ansilabnl.micetro.role:
+    name: local
+    state: absent
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

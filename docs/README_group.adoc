@@ -1,0 +1,37 @@
+=== ansilabnl.micetro.group
+
+Manage groups on Men&Mice Micetro
+
+==== Options
+
+- `descr`: Description of the group.
+- `name`: (required) Name of the group to create, remove or modify.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+- `roles`: List of roles to add to this group.
+- `state`: Should the role exist or not. (`absent`, `present`)
+- `users`: List of users to add to this group.
+
+==== Examples
+
+.Group example
+[source,yaml]
+----
+- name: Add the 'local' group
+  ansilabnl.micetro.group:
+    name: local
+    desc: A local group
+    state: present
+    users:
+      - johndoe
+    roles:
+      - IPAM Administrators (built-in)
+  mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Remove the 'local' group
+  ansilabnl.micetro.group:
+    name: local
+    state: absent
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

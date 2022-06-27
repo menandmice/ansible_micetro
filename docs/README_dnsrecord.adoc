@@ -1,0 +1,81 @@
+=== ansilabnl.micetro.dnsrecord
+
+Manage DNS records in Men&Mice Micetro
+
+In DNS it is very common to have multiple entries with the same name, as
+the example below shows.
+
+.Multiple DNS entries for a single name
+[source]
+----
+mail01.example.net.   7200   IN   A      192.0.2.25
+mail01.example.net.   7200   IN   A      192.0.2.143
+mail01.example.net.   7200   IN   AAAA   2001:db8::25
+mail01.example.net.   7200   IN   AAAA   2001:db8::587
+----
+
+[TIP]
+====
+To enable multiple records with the same name in the Ansible modules,
+there is no possibility to change a record, the only way is to add the new
+record with the updated data and remove the old one after that.
+====
+
+==== Options
+
+- `aging`: The aging timestamp of dynamic records in AD integrated zones.
+  Hours since January 1, 1601, UTC. Providing a non-zero value creates a
+  dynamic record.
+- `comment`: Comment string for the record. Note that only records in
+  static DNS zones can have a comment string
+- `data`: (required) The data that is added to the DNS record.
+  The record data is a space-separated list, when the resource type is
+  one of: `MX`, `SRV`, `NAPTR`, `CAA`, `CERT`, `HINFO` or `TLSA`. +
+  Example: `data: "100 10 U E2U+sip !^.*$!sip:customer-service@example.com! ."`
+  For MX and SRV the hostname should be the short name and not the FQDN.
+- `dnszone`: (required) The DNS zone where the action should take place.
+- `enabled`: True if the record is enabled. If the record is disabled the
+  value is false
+- `name`: (required) The name of the DNS record. Can either be partially
+  or fully qualified.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+- `rrtype`: Resource Record Type for this DNS record. Default is `A`.
+- `state`: The state of the properties. (`absent`, `present`)
+- `ttl`: The Time-To-Live of the DNS record.
+
+==== Examples
+
+.DNS record setting example
+[source,yaml]
+----
+- name: Set DNS record in zone for a defined name
+  ansilabnl.micetro.dnsrecord:
+    state: present
+    name: beatles
+    data: 172.16.17.2
+    rrtype: A
+    dnszone: example.net.
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Set PTR record in zone for a defined name
+  ansilabnl.micetro.dnsrecord:
+    state: present
+    name: "2.17.16.172.in-addr.arpa."
+    data: beatles.example.net.
+    rrtype: PTR
+    dnszone: "17.16.172.in-addr.arpa."
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Set MX record
+  ansilabnl.micetro.dnsrecord:
+    state: present
+    name: beatles
+    rrtype: MX
+    dnszone: example.net.
+    data: "10 ringo"
+    ttl: 86400
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

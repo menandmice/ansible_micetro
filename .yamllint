@@ -1,0 +1,22 @@
+---
+extends: default
+
+ignore: |
+  .tox
+  .github
+  docs
+  galaxy.yml
+  changelogs/
+  play_tests/
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  line-length:
+    ignore: |
+      hacking/
+      tests/

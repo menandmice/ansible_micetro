@@ -1,0 +1,48 @@
+=== ansilabnl.micetro.zone
+
+Manage DNS zones in Men&Mice Micetro
+
+==== Options
+
+- `adintegrated`: True if the zone is Active Directory integrated.
+- `adpartition`: The AD partition if the zone is Active Directory
+  integrated.
+- `adreplicationtype`: Type of the AD replication.
+- `authority`: Name of the DNS server that contains the zone or the
+  string `[Active Directory]` if the zone is integrated in the Active
+  Directory.
+- `customproperties`: Custom properties for the zone. These properties
+  must already exist. See also [ansilabnl.micetro.props].
+- `dynamic`: Dynamic DNS zone.
+- `masters`: The IP addresses of the master servers if the new zone is
+  not a master zone.
+- `name`: (required) Name of the zone.
+- `nameserver`: Nameserver to define the zone on. Required if
+  `state=present`.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+- `servtype`: Type of the master server.
+- `state`: The state of the zone. (`absent`, `present`)
+
+==== Examples
+
+.Zone example
+[source,yaml]
+----
+- name: Create a new zone
+  ansilabnl.micetro.zone:
+    state: present
+    name: example.com
+    nameserver: ns1.example.com
+    authority: mmsuite.example.net
+    customproperties:
+      location: Reykjavik
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Release a zone
+  ansilabnl.micetro.zone:
+    state: absent
+    name: example.com
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

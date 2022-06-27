@@ -1,0 +1,12 @@
+---
+plugin: ansilabnl.micetro.inventory
+mm_url: "http://mmsuite.example.net"
+mm_user: apidude
+mm_password: TheAPIDude
+
+#filters:
+##  - location: home
+#
+#ranges:
+#  - 2001:db8::/64
+#    - 172.16.17.0/24

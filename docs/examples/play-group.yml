@@ -1,0 +1,60 @@
+---
+#
+# Add, delete and change groups on Men&Mice Micetro example
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+- name: Men&Mice Micetro users test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Get the free IP address and show info
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version    : {{ ansible_version.full }}"
+          - "Python version     : {{ ansible_facts['python_version'] }}"
+          - "Python executable  : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Add the 'local' group
+      ansilabnl.micetro.group:
+        name: local
+        desc: A local rgroup
+        state: present
+        users:
+          - johndoe
+          - angelina
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Check idempotency
+      ansilabnl.micetro.group:
+        name: local
+        desc: A local group
+        state: present
+        users:
+          - johndoe
+          - angelina
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Add nonexisting user to group
+      ansilabnl.micetro.group:
+        name: local
+        desc: A local group
+        state: present
+        users:
+          - neverheardof
+        mm_provider: "{{ mm_provider }}"
+      ignore_errors: true                        # noqa: ignore-errors
+
+    - name: Remove the 'local' group
+      ansilabnl.micetro.group:
+        name: local
+        state: absent
+        mm_provider: "{{ mm_provider }}"

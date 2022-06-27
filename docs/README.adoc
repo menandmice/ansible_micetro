@@ -1,0 +1,68 @@
+include::resources/adocs/includes.adoc[]
+//
+:doctype: book
+:toc: right
+:toclevels: 3
+:organization: Men&Mice
+:revnumber: {version} ({localdate})
+:revdate: 2022-05-30
+:reproducible:
+:figure-caption: Table
+:figure-caption: Figure
+:listing-caption: Listing
+:source-highlighter: rouge
+:rouge-linenums-mode: inline
+:rouge-style: github
+:version-label!:
+:media: prepress
+:optimize: prepress
+:compress:
+:xrefstyle: full
+:experimental:
+
+// Font icons are supported and the Foundation Icon set is
+// used as the default.
+// For a complete overview have a look at
+//    https://zurb.com/playground/foundation-icon-fonts-3
+//
+:icons: font
+:icon-set: fi
+
+// Define standard stuff
+:sldnum: 0
+:sectnums:
+:sourcedir: .
+:imagesdir: ./resources/images
+:iconsdir: ./resources/icons
+:pdf-themesdir: ./resources/themes
+:pdf-fontsdir: ./resources/fonts
+:pdf-theme: mandm.yml
+
+:source-highlighter: rouge
+:rouge-linenums-mode: table
+:rouge-style: github
+
+// URLs
+:uri-at: https://atcomputing.nl
+
+// Define title and author
+= Men&Mice Micetro Collection
+Ton Kersten <t.kersten@atcomputing.nl>
+:title-page:
+
+// Include all chapters
+include::README_general.adoc[]
+
+== Ansible plugins
+
+include::README_freeip.adoc[]
+
+include::README_inventory.adoc[]
+
+include::README_ipinfo.adoc[]
+
+include::README_modules.adoc[]
+
+include::README_playbooks.adoc[]
+
+include::README_credentials.adoc[]

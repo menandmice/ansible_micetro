@@ -1,0 +1,34 @@
+=== ansilabnl.micetro.claimip
+
+Claim IP addresses in DHCP in Men&Mice Micetro
+
+==== Options
+
+- `customproperties`: Custom properties for the IP address. These
+  properties must already exist. See also [ansilabnl.micetro.props]
+- `ipaddress`: (required) The IP address(es) to work on.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+- `state`: The state of the claim. (`absent`, `present`)
+
+==== Examples
+
+.Claim IP address example
+[source,yaml]
+----
+- name: Claim IP address
+  ansilabnl.micetro.claimip:
+    state: present
+    ipaddress: 172.16.12.14
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+
+- name: Release claim on IP addresses
+  ansilabnl.micetro.claimip:
+    state: present
+    ipaddress:
+      - 172.16.12.14
+      - 172.16.12.15
+      - 172.16.12.16
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

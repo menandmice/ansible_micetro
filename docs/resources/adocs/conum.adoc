@@ -1,0 +1,46 @@
+// All defined 'balls'
+
+// These are the solid ones (\u2776-\u277f,\u24eb-\u24f4)
+:solid1:  &#x2776;
+:solid2:  &#x2777;
+:solid3:  &#x2778;
+:solid4:  &#x2779;
+:solid5:  &#x277a;
+:solid6:  &#x277b;
+:solid7:  &#x277c;
+:solid8:  &#x277d;
+:solid9:  &#x277e;
+:solid10: &#x277f;
+:solid11: &#x24eb;
+:solid12: &#x24ec;
+:solid13: &#x24ed;
+:solid14: &#x24ee;
+:solid15: &#x24ef;
+:solid16: &#x24f0;
+:solid17: &#x24f0;
+:solid18: &#x24f2;
+:solid19: &#x24f3;
+:solid20: &#x24f4;
+//
+//
+//
+:open1:  &#x2460;
+:open2:  &#x2461;
+:open3:  &#x2462;
+:open4:  &#x2463;
+:open5:  &#x2464;
+:open6:  &#x2465;
+:open7:  &#x2466;
+:open8:  &#x2467;
+:open9:  &#x2468;
+:open10: &#x2469;
+:open11: &#x246a;
+:open12: &#x246b;
+:open13: &#x246c;
+:open14: &#x246d;
+:open15: &#x246e;
+:open16: &#x246f;
+:open17: &#x2470;
+:open18: &#x2471;
+:open19: &#x2472;
+:open20: &#x2473;

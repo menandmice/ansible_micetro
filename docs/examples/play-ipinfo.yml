@@ -1,0 +1,39 @@
+---
+#
+# Get all info for an IP address on Men&Mice Micetro example
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+- name: Men&Mice Micetro IP Info test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Get get IP info
+      ansible.builtin.set_fact:
+        ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '172.16.17.2') | to_nice_json }}"
+
+    - name: Show Ansible and Python information
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version    : {{ ansible_version.full }}"
+          - "Python version     : {{ ansible_facts['python_version'] }}"
+          - "Python executable  : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Show all infor for this IP address
+      ansible.builtin.debug:
+        var: ipinfo
+
+    # This task tries to get the information for a non-existing IP address
+    # which results in a fatal `Object not found for reference` error
+    - name: Get get IP info for a non existing IP address
+      ansible.builtin.set_fact:
+        ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '390.916.17.2') | to_nice_json }}"
+      ignore_errors: true                        # noqa: ignore-errors

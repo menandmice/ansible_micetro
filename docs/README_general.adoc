@@ -1,0 +1,25 @@
+== Ansible setup for Men&Mice Micetro
+
+With the Ansible setup for Men&Mice Micetro you can manage a Men&Mice
+installation through Ansible. The Ansible modules and plugins connect to
+the Men&Mice Micetro API and perform all needed actions.
+
+The modules and plugins need to be installed on the Ansible control
+node, often called the Ansible Master and Ansible needs to be configured
+so that the modules and plugins can be found by Ansible.
+
+=== Installation
+
+Installing the Ansible modules and plugins is a straight forward
+process, just install from the Ansible Galaxy.
+
+[source,bash]
+----
+ansible-galaxy collection install ansilabnl.micetro
+----
+
+==== Requirements
+
+The Ansible integration modules and plugins do not need anything beyond
+a standard Ansible installation. The minimum Ansible version is 2.9 and
+up and the required Python version is 3.6+.

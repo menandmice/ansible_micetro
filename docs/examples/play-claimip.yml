@@ -1,0 +1,51 @@
+---
+#
+# Claim and release an IP address on Men&Mice Micetro example
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+#
+- name: Men&Mice Micetro ClaimIP test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Ansible information
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version   : {{ ansible_version.full }}"
+          - "Python version    : {{ ansible_facts['python_version'] }}"
+          - "Python executable : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Claim IP address
+      ansilabnl.micetro.claimip:
+        state: present
+        ipaddress: 172.16.12.14
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Check idempotentie
+      ansilabnl.micetro.claimip:
+        state: present
+        ipaddress: 172.16.12.14
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Unclaim IP address
+      ansilabnl.micetro.claimip:
+        state: present
+        ipaddress: 172.16.12.14
+        mm_provider: "{{ mm_provider }}"
+
+    # This task claims an IP address that cannot exit
+    # and returns a warning because of that
+    - name: Claim erroneous IP address
+      ansilabnl.micetro.claimip:
+        state: present
+        ipaddress: 456.978.12.14
+        mm_provider: "{{ mm_provider }}"

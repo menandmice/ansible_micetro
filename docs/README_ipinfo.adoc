@@ -1,0 +1,42 @@
+=== ansilabnl.micetro.ipinfo plugin
+
+This Men&Mice IPInfo lookup plugin finds a lot of info about a specified
+IP address, defined in Men&Mice Micetro.
+
+==== Options
+
+- `ipaddress`: (required) The IP address that is examined
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Usage
+
+The `ansilabnl.micetro.ipinfo` plugin delivers a complete set of information about an
+IP address, as it is delivered by the Men&Mice Micetro API.
+
+Example usage:
+
+.Get information on an IP address
+[source,yaml]
+----
+- name: Get all info for this IP address
+  debug:
+    var: ipinfo
+  vars:
+    ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '172.16.17.2') | to_nice_json }}"
+----
+
+With output like (output shortened):
+
+[source,bash]
+----
+ok: [localhost] => {
+    "ipinfo": {
+        "addrRef": "IPAMRecords/11",
+        "address": "172.16.17.2",
+        "claimed": false,
+        "customProperties": {
+            "location": "At the attic"
+        },
+    }
+}
+----

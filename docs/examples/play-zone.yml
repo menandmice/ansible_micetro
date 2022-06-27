@@ -1,0 +1,43 @@
+---
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+- name: Men&Mice Micetro zone test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Ansible information
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version   : {{ ansible_version.full }}"
+          - "Python version    : {{ ansible_facts['python_version'] }}"
+          - "Python executable : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Ensure the zone
+      ansilabnl.micetro.zone:
+        state: present
+        name: example.com
+        nameserver: mandm.example.com
+        authority: mandm.example.net
+        masters: mandm.example.net
+        servtype: master
+        customproperties:
+          owner: Me, myself and I
+          place: Netherlands
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+
+    - name: Remove the zone
+      ansilabnl.micetro.zone:
+        state: absent
+        name: example.com
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost

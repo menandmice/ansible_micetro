@@ -1,0 +1,92 @@
+---
+#
+# Add, delete and change users on Men&Mice Micetro example
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+- name: Men&Mice Micetro users test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Get the free IP address and show info
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version    : {{ ansible_version.full }}"
+          - "Python version     : {{ ansible_facts['python_version'] }}"
+          - "Python executable  : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Add the user 'johnd' as an admin
+      ansilabnl.micetro.user:
+        username: johnd
+        password: password
+        full_name: John Doe
+        state: present
+        authentication_type: internal
+        roles:
+          - Administrators (built-in)
+          - DNS Administrators (built-in)
+          - DHCP Administrators (built-in)
+          - IPAM Administrators (built-in)
+          - User Administrators (built-in)
+          - Approvers (built-in)
+          - Requesters (built-in)
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Check idempotency
+      ansilabnl.micetro.user:
+        username: johnd
+        password: password
+        full_name: John Doe
+        state: present
+        authentication_type: internal
+        roles:
+          - Administrators (built-in)
+          - DNS Administrators (built-in)
+          - DHCP Administrators (built-in)
+          - IPAM Administrators (built-in)
+          - User Administrators (built-in)
+          - Approvers (built-in)
+          - Requesters (built-in)
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Change the groups
+      ansilabnl.micetro.user:
+        username: johnd
+        password: password
+        full_name: John Doe
+        state: present
+        authentication_type: internal
+        roles:
+          - Administrators (built-in)
+          - User Administrators (built-in)
+          - Approvers (built-in)
+          - Requesters (built-in)
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Check idempotency again
+      ansilabnl.micetro.user:
+        username: johnd
+        password: password
+        full_name: John Doe
+        state: present
+        authentication_type: internal
+        roles:
+          - Administrators (built-in)
+          - User Administrators (built-in)
+          - Approvers (built-in)
+          - Requesters (built-in)
+        mm_provider: "{{ mm_provider }}"
+
+    - name: Remove the user again
+      ansilabnl.micetro.user:
+        username: johnd
+        state: absent
+        mm_provider: "{{ mm_provider }}"

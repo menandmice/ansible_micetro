@@ -1,0 +1,114 @@
+---
+#
+# Set and change a DNS record on Men&Mice Micetro example
+#
+# The file <ansible_topdir>/group_vars/all contains:
+#
+#    ---
+#    mm_provider:
+#      mm_url: http://mmsuite.example.net
+#      mm_user: apiuser
+#      mm_password: apipasswd
+#
+- name: Men&Mice Micetro DNSRecord test play
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Ansible information
+      ansible.builtin.debug:
+        msg:
+          - "Ansible version   : {{ ansible_version.full }}"
+          - "Python version    : {{ ansible_facts['python_version'] }}"
+          - "Python executable : {{ ansible_facts['python']['executable'] }}"
+
+    - name: Set DNS record
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: A
+        dnszone: testzone
+        data: 192.168.10.12
+        comment: From The API side
+        ttl: 86400
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+
+    - name: Check idempotentie
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: A
+        dnszone: testzone
+        data: 192.168.10.12
+        comment: From The API side
+        ttl: 86400
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+
+    - name: Set DNS record with erroneous values
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: AAAA
+        dnszone: testzone
+        data: 192.168.10.127
+        comment: From The API side
+        ttl: apple
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+      ignore_errors: true                        # noqa: ignore-errors
+
+    - name: Change record
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: A
+        dnszone: testzone
+        data: 192.168.10.14
+        comment: From The API side
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+
+    - name: Add records to non existing zone
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: A
+        dnszone: notthetestzone
+        data: 192.168.90.14
+        comment: Welcome to the error
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+      ignore_errors: true                        # noqa: ignore-errors
+
+    - name: Use a very invalid IP address
+      ansilabnl.micetro.dnsrecord:
+        state: present
+        name: beatles
+        rrtype: A
+        dnszone: testzone
+        data: 192.168.390.14
+        comment: Welcome to the error
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+      ignore_errors: true                        # noqa: ignore-errors
+
+    - name: Remove record
+      ansilabnl.micetro.dnsrecord:
+        state: absent
+        name: beatles
+        dnszone: notthetestzone
+        data: 192.168.90.14
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost
+
+    - name: Remove record - again
+      ansilabnl.micetro.dnsrecord:
+        state: absent
+        name: beatles
+        dnszone: notthetestzone
+        data: 192.168.90.14
+        mm_provider: "{{ mm_provider }}"
+      delegate_to: localhost

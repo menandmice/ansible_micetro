@@ -1,0 +1,104 @@
+== Example playbooks
+
+To use Men&Mice Micetro Ansible Integration you need to create Ansible
+playbooks that utilize the functionality of Men&Mice Micetro.
+
+Following are a couple of example playbooks for inspiration.
+
+These playbooks have been tested extensively with different operating
+systems, versions of Ansible and Python. For a complete overview, have
+a look at the "<<README_testmatrix.adoc#testmatrix,Testmatrix>>" chapter.
+
+Caveat: As the operating systems do not have all these combinations of
+Ansible and Python available, the tests where done in Python virtual
+environments.
+
+All these playbooks are available in the `examples` directory.
+
+=== play-user
+
+.Add, delete or change a user
+[source,yaml]
+----
+include::{sourcedir}/examples/play-user.yml[]
+----
+
+=== play-group
+
+.Add, delete or change a group
+[source,yaml]
+----
+include::{sourcedir}/examples/play-group.yml[]
+----
+
+=== play-role
+
+.Add, delete or change a role
+[source,yaml]
+----
+include::{sourcedir}/examples/play-role.yml[]
+----
+
+=== play-props
+
+.Add, delete or change custom properties on assets
+[source,yaml]
+----
+include::{sourcedir}/examples/play-props.yml[]
+----
+
+=== play-claimip
+
+.Claim IP addresses in one or more ranges
+[source,yaml]
+----
+include::{sourcedir}/examples/play-claimip.yml[]
+----
+
+=== play-dhcp
+
+.Make and release DHCP reservations
+[source,yaml]
+----
+include::{sourcedir}/examples/play-dhcp.yml[]
+----
+
+=== play-zone
+
+.Add, delete or change a DNS zone
+[source,yaml]
+----
+include::{sourcedir}/examples/play-zone.yml[]
+----
+
+=== play-dnsrecord
+
+.Add and change a DNS record
+[source,yaml]
+----
+include::{sourcedir}/examples/play-dnsrecord.yml[]
+----
+
+=== play-freeip
+
+.Find free IP addresses in a range or ranges
+[source,yaml]
+----
+include::{sourcedir}/examples/play-freeip.yml[]
+----
+
+=== play-ipinfo
+
+.Collect a lot of info concerning an IP address
+[source,yaml]
+----
+include::{sourcedir}/examples/play-ipinfo.yml[]
+----
+
+=== play_it_all
+
+.Example of a playbook that combines functionality
+[source,yaml]
+----
+include::{sourcedir}/examples/play_it_all.yml[]
+----
