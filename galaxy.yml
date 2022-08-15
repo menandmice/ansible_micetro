@@ -1,6 +1,6 @@
 ---
-namespace: ansilabnl
-name: micetro
+namespace: menandmice
+name: ansible_micetro
 version: 1.0.3
 readme: README.md
 authors:
@@ -17,18 +17,18 @@ tags:
   - ipam
   - ansible
   - automation
-repository: https://github.com/ansilabnl/micetro
+repository: https://github.com/menandmice/ansible_micetro
 homepage: https://menandmice.com/
-documentation: //github.com/ansilabnl/micetro/docs
-issues: https://github.com/ansilabnl/micetro/issues
+documentation: https://github.com/menandmice/ansible_micetro/docs
+issues: https://github.com/menandmice/ansible_micetro/issues
 dependencies: {}
 build_ignore:
   - a
   - .tox
   - play_tests
   - docs
-  - '*.tar.gz'
-  - '*.tgz'
+  - "*.tar.gz"
+  - "*.tgz"
   - micetro.yml
   - ansible.cfg
   - group_vars

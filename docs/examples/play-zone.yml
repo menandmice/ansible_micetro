@@ -22,7 +22,7 @@
           - "Python executable : {{ ansible_facts['python']['executable'] }}"
 
     - name: Ensure the zone
-      ansilabnl.micetro.zone:
+      menandmice.ansible_micetro.zone:
         state: present
         name: example.com
         nameserver: mandm.example.com
@@ -36,7 +36,7 @@
       delegate_to: localhost
 
     - name: Remove the zone
-      ansilabnl.micetro.zone:
+      menandmice.ansible_micetro.zone:
         state: absent
         name: example.com
         mm_provider: "{{ mm_provider }}"

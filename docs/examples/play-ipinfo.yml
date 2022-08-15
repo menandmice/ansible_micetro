@@ -18,7 +18,7 @@
   tasks:
     - name: Get get IP info
       ansible.builtin.set_fact:
-        ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '172.16.17.2') | to_nice_json }}"
+        ipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, '172.16.17.2') | to_nice_json }}"
 
     - name: Show Ansible and Python information
       ansible.builtin.debug:
@@ -35,5 +35,5 @@
     # which results in a fatal `Object not found for reference` error
     - name: Get get IP info for a non existing IP address
       ansible.builtin.set_fact:
-        ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '390.916.17.2') | to_nice_json }}"
-      ignore_errors: true                        # noqa: ignore-errors
+        ipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, '390.916.17.2') | to_nice_json }}"
+      ignore_errors: true # noqa: ignore-errors

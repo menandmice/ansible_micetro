@@ -19,7 +19,7 @@ __metaclass__ = type
 # All imports
 from ansible.module_utils.basic import AnsibleModule
 from ansible.utils import unicode
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
     get_dhcp_scopes,
@@ -102,7 +102,7 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 - name: Add a reservation for an IP address
- ansilabnl.micetro.dhcp:
+ menandmice.ansible_micetro.dhcp:
     state: present
     name: myreservation
     ipaddress: 172.16.17.8

@@ -24,7 +24,7 @@
           - "Python executable : {{ ansible_facts['python']['executable'] }}"
 
     - name: Add a reservation for an IP address
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
         ipaddress: 172.16.17.8
@@ -33,7 +33,7 @@
       delegate_to: localhost
 
     - name: check idempotentie
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
         ipaddress: 172.16.17.8
@@ -45,7 +45,7 @@
     # would alter the reservation. To achieve this, release the reservation
     # and reclaim it.
     - name: change mac
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
         ipaddress: 172.16.17.8
@@ -54,7 +54,7 @@
       delegate_to: localhost
 
     - name: change ip
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
         ipaddress: 172.16.17.9
@@ -63,7 +63,7 @@
       delegate_to: localhost
 
     - name: change name
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: movemyreservation
         ipaddress: 172.16.17.9
@@ -72,7 +72,7 @@
       delegate_to: localhost
 
     - name: delete reservation (wrong one)
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: absent
         name: movemyreservation
         ipaddress: 172.16.17.9
@@ -81,7 +81,7 @@
       delegate_to: localhost
 
     - name: delete reservation (correct one)
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: absent
         name: myreservation
         ipaddress: 172.16.17.8
@@ -90,7 +90,7 @@
       delegate_to: localhost
 
     - name: create reservation in invalid range
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: reservationnonet
         ipaddress: 172.16.17.58

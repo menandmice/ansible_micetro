@@ -17,7 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
 )
 
@@ -57,7 +57,7 @@ DOCUMENTATION = r"""
 EXAMPLES = r"""
 - name: Find all info for IP 172.16.17.2
   debug:
-    msg: "Info for IP: {{ lookup('ansilabnl.micetro.ipinfo', mm_provider, '172.16.17.2') }}"
+    msg: "Info for IP: {{ lookup('menandmice.ansible_micetro.ipinfo', mm_provider, '172.16.17.2') }}"
   vars:
     mm_provider:
       mm_url: http://mmsuite.example.net
@@ -72,7 +72,7 @@ EXAMPLES = r"""
       mm_url: http://mmsuite.example.net
       mm_user: apiuser
       mm_password: apipasswd
-    ipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, '172.16.17.2') }}"
+    ipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, '172.16.17.2') }}"
 """
 
 RETURN = r"""

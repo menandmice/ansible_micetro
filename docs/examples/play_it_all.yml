@@ -54,7 +54,7 @@
       become: true
 
     - name: define custom properties for IP addresses
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         name: location
         state: present
         proptype: text
@@ -66,7 +66,7 @@
     # the Ansible loop functionality.
     #
     # - name: Example of multiple properties
-    #   ansilabnl.micetro.props:
+    #   menandmice.ansible_micetro.props:
     #      name: "{{ item.name }}"
     #      state: "{{ item.state }}"
     #      proptype: "{{ item.proptype }}"
@@ -90,7 +90,7 @@
     # multiple hosts.
     - name: get free IP addresses and set it as a fact
       ansible.builtin.set_fact:
-        freeips: "{{ query('ansilabnl.micetro.freeip', mm_provider, network, claim=60, excludedhcp=True) }}"
+        freeips: "{{ query('menandmice.ansible_micetro.freeip', mm_provider, network, claim=60, excludedhcp=True) }}"
 
     - name: Get the free IP address and show info
       ansible.builtin.debug:
@@ -101,7 +101,7 @@
     # Make a DHCP reservation for this address
     # So claim it after DNS setting.
     - name: Reservation on IP address
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: present
         name: testhost
         ipaddress: "{{ freeips }}"
@@ -110,7 +110,7 @@
       delegate_to: localhost
 
     - name: Set properties on IP
-      ansilabnl.micetro.ipprops:
+      menandmice.ansible_micetro.ipprops:
         state: present
         ipaddress: "{{ freeips }}"
         properties:
@@ -120,7 +120,7 @@
       delegate_to: localhost
 
     - name: Ensure the zone
-      ansilabnl.micetro.zone:
+      menandmice.ansible_micetro.zone:
         state: present
         name: thetestzone.com
         nameserver: mandm.example.com
@@ -130,11 +130,11 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    # The `ansilabnl.micetro.freeip` plugin always returns a list, but the request was for just 1
-    # IP address. The `ansilabnl.micetro.dnsrecord` only needs a single IP address. That's why the
+    # The `menandmice.ansible_micetro.freeip` plugin always returns a list, but the request was for just 1
+    # IP address. The `menandmice.ansible_micetro.dnsrecord` only needs a single IP address. That's why the
     # list-slice `[0]` is used.
     - name: Set a DNS record for the claimed IP
-      ansilabnl.micetro.dnsrecord:
+      menandmice.ansible_micetro.dnsrecord:
         dnszone: testzone
         name: testhost
         data: "{{ freeips[0] }}"
@@ -142,7 +142,7 @@
       delegate_to: localhost
 
     - name: Set a PTR DNS record for the claimed IP
-      ansilabnl.micetro.dnsrecord:
+      menandmice.ansible_micetro.dnsrecord:
         dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:]  | join('.') }}"
         name: "{{ freeips[0] | ansible.utils.ipaddr('revdns') }}"
         data: "testhost.testzone."
@@ -150,17 +150,17 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    # The `ansilabnl.micetro.ipinfo` returns all known information of an IP
+    # The `menandmice.ansible_micetro.ipinfo` returns all known information of an IP
     # address. This can be used to query certain properties, or
     # for debugging.
     - name: Get all info for this IP address
       ansible.builtin.debug:
         var: freeipinfo
       vars:
-        freeipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
+        freeipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
 
     - name: Renew properties on IP
-      ansilabnl.micetro.ipprops:
+      menandmice.ansible_micetro.ipprops:
         state: present
         ipaddress: "{{ freeips }}"
         properties:
@@ -173,10 +173,10 @@
       ansible.builtin.debug:
         var: freeipinfo
       vars:
-        freeipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
+        freeipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
 
     - name: Remove properties of IP
-      ansilabnl.micetro.ipprops:
+      menandmice.ansible_micetro.ipprops:
         state: present
         ipaddress: "{{ freeips }}"
         deleteunspecified: true
@@ -189,10 +189,10 @@
       ansible.builtin.debug:
         var: freeipinfo
       vars:
-        freeipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
+        freeipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
 
     - name: Remove reservation on IP address
-      ansilabnl.micetro.dhcp:
+      menandmice.ansible_micetro.dhcp:
         state: absent
         name: testhost
         ipaddress: "{{ freeips }}"
@@ -204,10 +204,10 @@
       ansible.builtin.debug:
         var: freeipinfo
       vars:
-        freeipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
+        freeipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
 
     - name: Remove DNS record for the claimed IP
-      ansilabnl.micetro.dnsrecord:
+      menandmice.ansible_micetro.dnsrecord:
         state: absent
         dnszone: testzone
         name: testhost
@@ -216,7 +216,7 @@
       delegate_to: localhost
 
     - name: Remove the PTR DNS record for the claimed IP
-      ansilabnl.micetro.dnsrecord:
+      menandmice.ansible_micetro.dnsrecord:
         state: absent
         dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:]  | join('.') }}"
         name: "{{ freeips[0] | ansible.utils.ipaddr('revdns') }}"
@@ -229,10 +229,10 @@
       ansible.builtin.debug:
         var: freeipinfo
       vars:
-        freeipinfo: "{{ query('ansilabnl.micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
+        freeipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, freeips[0]) | to_nice_json }}"
 
     - name: Ensure the zone absent
-      ansilabnl.micetro.zone:
+      menandmice.ansible_micetro.zone:
         state: absent
         name: thetestzone.com
         nameserver: mandm.example.com

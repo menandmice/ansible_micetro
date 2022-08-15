@@ -1,5 +1,5 @@
 ---
-plugin: ansilabnl.micetro.inventory
+plugin: menandmice.ansible_micetro.inventory
 mm_url: "http://web.mmdemo.net"
 mm_user: "ton"
 mm_password: "4ton!"

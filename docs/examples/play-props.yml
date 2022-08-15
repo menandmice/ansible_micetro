@@ -24,7 +24,7 @@
           - "Python executable : {{ ansible_facts['python']['executable'] }}"
 
     - name: Set text property
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: present
         name: MyProperty
         proptype: text
@@ -38,7 +38,7 @@
       delegate_to: localhost
 
     - name: Check idempotentie
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: present
         name: MyProperty
         proptype: text
@@ -52,7 +52,7 @@
       delegate_to: localhost
 
     - name: Change type - not allowed
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: present
         name: MyProperty
         proptype: yesno
@@ -66,7 +66,7 @@
       delegate_to: localhost
 
     - name: Change list around
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: present
         name: MyProperty
         proptype: text
@@ -80,7 +80,7 @@
       delegate_to: localhost
 
     - name: Remove property
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: absent
         name: MyProperty
         proptype: text
@@ -89,7 +89,7 @@
       delegate_to: localhost
 
     - name: Remove property - again
-      ansilabnl.micetro.props:
+      menandmice.ansible_micetro.props:
         state: absent
         name: MyProperty
         proptype: yesno

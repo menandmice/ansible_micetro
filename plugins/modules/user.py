@@ -17,7 +17,7 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     getrefs,
 )
@@ -100,7 +100,7 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 - name: Add the user 'johnd' as an admin
- ansilabnl.micetro.user:
+ menandmice.ansible_micetro.user:
     username: johnd
     password: password
     full_name: John Doe
@@ -121,7 +121,7 @@ EXAMPLES = r"""
   delegate_to: localhost
 
 - name: Remove user 'johnd'
- ansilabnl.micetro.user:
+ menandmice.ansible_micetro.user:
     username: johnd
     state: absent
     mm_provider:

@@ -25,7 +25,7 @@ from ansible import constants as C
 # from ansible.module_utils.urls import urllib_error, socket, httplib
 from ansible.errors import AnsibleParserError
 from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
 )
 
@@ -50,12 +50,12 @@ DOCUMENTATION = """
         command must be @micetro_inventory.
     options:
       plugin:
-        description: the name of this plugin, it should always be set to 'ansilabnl.micetro.inventory'
+        description: the name of this plugin, it should always be set to 'menandmice.ansible_micetro.inventory'
                      for this plugin to recognize it as it's own.
         env:
           - name: ANSIBLE_INVENTORY_ENABLED
         required: True
-        choices: ['ansilabnl.micetro.inventory']
+        choices: ['menandmice.ansible_micetro.inventory']
       mm_url:
         description: The network address of the Men&Mice Micetro host
         type: string
@@ -99,7 +99,7 @@ EXAMPLES = """
 
 # Examples using micetro_inventory.yml file
 
-plugin: ansilabnl.micetro.inventory
+plugin: menandmice.ansible_micetro.inventory
 mm_url: "http://mmsuite.example.net"
 mm_user: apiuser
 mm_password: apipasswd
@@ -107,7 +107,7 @@ filters:
   - location: London
 
 
-plugin: ansilabnl.micetro.inventory
+plugin: menandmice.ansible_micetro.inventory
 mm_url: "http://mmsuite.example.net"
 mm_user: apiuser
 mm_password: apipasswd
@@ -124,7 +124,7 @@ when either ranges-conditions are met.
 
 # With in the ansible.cfg
 [inventory]
-enable_plugins = ansilabnl.micetro.inventory, host_list, auto
+enable_plugins = menandmice.ansible_micetro.inventory, host_list, auto
 cache = yes
 cache_plugin = pickle
 cache_prefix = micetro_inv

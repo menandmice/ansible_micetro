@@ -24,7 +24,7 @@
           - "Python executable  : {{ ansible_facts['python']['executable'] }}"
 
     - name: Add the user 'johnd' as an admin
-      ansilabnl.micetro.user:
+      menandmice.ansible_micetro.user:
         username: johnd
         password: password
         full_name: John Doe
@@ -41,7 +41,7 @@
         mm_provider: "{{ mm_provider }}"
 
     - name: Check idempotency
-      ansilabnl.micetro.user:
+      menandmice.ansible_micetro.user:
         username: johnd
         password: password
         full_name: John Doe
@@ -58,7 +58,7 @@
         mm_provider: "{{ mm_provider }}"
 
     - name: Change the groups
-      ansilabnl.micetro.user:
+      menandmice.ansible_micetro.user:
         username: johnd
         password: password
         full_name: John Doe
@@ -72,7 +72,7 @@
         mm_provider: "{{ mm_provider }}"
 
     - name: Check idempotency again
-      ansilabnl.micetro.user:
+      menandmice.ansible_micetro.user:
         username: johnd
         password: password
         full_name: John Doe
@@ -86,7 +86,7 @@
         mm_provider: "{{ mm_provider }}"
 
     - name: Remove the user again
-      ansilabnl.micetro.user:
+      menandmice.ansible_micetro.user:
         username: johnd
         state: absent
         mm_provider: "{{ mm_provider }}"

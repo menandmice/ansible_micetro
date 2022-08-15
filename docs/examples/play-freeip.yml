@@ -22,14 +22,14 @@
   tasks:
     - name: Set free IP addresses as a fact
       ansible.builtin.set_fact:
-        freeips: "{{ query('ansilabnl.micetro.freeip',
-                         mm_provider,
-                         network,
-                         multi=25,
-                         claim=60,
-                         excludedhcp=True,
-                         ping=True)
-               }}"
+        freeips: "{{ query('menandmice.ansible_micetro.freeip',
+          mm_provider,
+          network,
+          multi=25,
+          claim=60,
+          excludedhcp=True,
+          ping=True)
+          }}"
 
     - name: Get the free IP address and show info
       ansible.builtin.debug:

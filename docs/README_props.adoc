@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.props
+=== menandmice.ansible_micetro.props
 
 Manage custom properties in Men&Mice Micetro
 
@@ -28,7 +28,7 @@ Manage custom properties in Men&Mice Micetro
 [source,yaml]
 ----
 - name: Set deinition for custom properties
-  ansilabnl.micetro.props:
+  menandmice.ansible_micetro.props:
     name: location
     state: present
     proptype: text

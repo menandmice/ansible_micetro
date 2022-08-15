@@ -15,7 +15,7 @@ process, just install from the Ansible Galaxy.
 
 [source,bash]
 ----
-ansible-galaxy collection install ansilabnl.micetro
+ansible-galaxy collection install menandmice.ansible_micetro
 ----
 
 ==== Requirements

@@ -17,7 +17,7 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     getrefs,
 )
@@ -81,7 +81,7 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 - name: Add the 'local' role
- ansilabnl.micetro.role:
+ menandmice.ansible_micetro.role:
     name: local
     desc: A local role
     state: present
@@ -96,7 +96,7 @@ EXAMPLES = r"""
   delegate_to: localhost
 
 - name: Remove the 'local' role
- ansilabnl.micetro.role:
+ menandmice.ansible_micetro.role:
     name: local
     state: absent
     mm_provider:

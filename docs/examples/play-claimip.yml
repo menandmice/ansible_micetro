@@ -25,19 +25,19 @@
           - "Python executable : {{ ansible_facts['python']['executable'] }}"
 
     - name: Claim IP address
-      ansilabnl.micetro.claimip:
+      menandmice.ansible_micetro.claimip:
         state: present
         ipaddress: 172.16.12.14
         mm_provider: "{{ mm_provider }}"
 
     - name: Check idempotentie
-      ansilabnl.micetro.claimip:
+      menandmice.ansible_micetro.claimip:
         state: present
         ipaddress: 172.16.12.14
         mm_provider: "{{ mm_provider }}"
 
     - name: Unclaim IP address
-      ansilabnl.micetro.claimip:
+      menandmice.ansible_micetro.claimip:
         state: present
         ipaddress: 172.16.12.14
         mm_provider: "{{ mm_provider }}"
@@ -45,7 +45,7 @@
     # This task claims an IP address that cannot exit
     # and returns a warning because of that
     - name: Claim erroneous IP address
-      ansilabnl.micetro.claimip:
+      menandmice.ansible_micetro.claimip:
         state: present
         ipaddress: 456.978.12.14
         mm_provider: "{{ mm_provider }}"

@@ -1,5 +1,5 @@
 ---
-plugin: ansilabnl.micetro.inventory
+plugin: menandmice.ansible_micetro.inventory
 mm_url: "http://mmsuite.example.net"
 mm_user: apidude
 mm_password: TheAPIDude

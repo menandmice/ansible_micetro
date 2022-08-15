@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.dnsrecord
+=== menandmice.ansible_micetro.dnsrecord
 
 Manage DNS records in Men&Mice Micetro
 
@@ -49,7 +49,7 @@ record with the updated data and remove the old one after that.
 [source,yaml]
 ----
 - name: Set DNS record in zone for a defined name
-  ansilabnl.micetro.dnsrecord:
+  menandmice.ansible_micetro.dnsrecord:
     state: present
     name: beatles
     data: 172.16.17.2
@@ -59,7 +59,7 @@ record with the updated data and remove the old one after that.
   delegate_to: localhost
 
 - name: Set PTR record in zone for a defined name
-  ansilabnl.micetro.dnsrecord:
+  menandmice.ansible_micetro.dnsrecord:
     state: present
     name: "2.17.16.172.in-addr.arpa."
     data: beatles.example.net.
@@ -69,7 +69,7 @@ record with the updated data and remove the old one after that.
   delegate_to: localhost
 
 - name: Set MX record
-  ansilabnl.micetro.dnsrecord:
+  menandmice.ansible_micetro.dnsrecord:
     state: present
     name: beatles
     rrtype: MX

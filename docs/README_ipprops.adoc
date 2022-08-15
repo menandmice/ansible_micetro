@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.ipprops
+=== menandmice.ansible_micetro.ipprops
 
 Set properties on an IP address in Men&Mice Micetro
 
@@ -17,7 +17,7 @@ Set properties on an IP address in Men&Mice Micetro
 [source,yaml]
 ----
 - name: Set properties on IP
-  ansilabnl.micetro.ipprops:
+  menandmice.ansible_micetro.ipprops:
     state: present
     ipaddress: 172.16.12.14
     properties:

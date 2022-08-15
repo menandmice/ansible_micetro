@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.inventory plugin
+=== menandmice.ansible_micetro.inventory plugin
 
 This plugin generates the inventory from Men&Mice Micetro. It supports reading
 configuration from both a YAML configuration file and environment variables. If
@@ -8,7 +8,7 @@ reading from the YAML file, the filename must end with
 configuration file are missing, this plugin will try to fill in the missing
 arguments by reading from environment variables. If reading configurations from
 environment variables, the path in the command must be
-`@ansilabnl.micetro.inventory`.
+`@menandmice.ansible_micetro.inventory`.
 
 Valid configuration filenames are:
 
@@ -24,10 +24,10 @@ use the plugin.
 
 ===== Plugin configuration
 
-The `ansilabnl.micetro.inventory` plugin is configured through a configuration
+The `menandmice.ansible_micetro.inventory` plugin is configured through a configuration
 file, named (e.g.) `micetro_inv.yml` and the options are:
 
-* plugin: Name of the plugin (`ansilabnl.micetro.inventory`)
+* plugin: Name of the plugin (`menandmice.ansible_micetro.inventory`)
 * host: Men&Mice Micetro to connect to (`http://micetro.example.net`)
 * user: UserID to connect with (`apiuser`)
 * password: The password to connect with (`apipasswd`)
@@ -59,7 +59,7 @@ An example of the `micetro_inventory.yml` file:
 
 [source,yaml]
 ----
-plugin: ansilabnl.micetro.inventory
+plugin: menandmice.ansible_micetro.inventory
 mm_url: "http://micetro.example.net"
 mm_user: apiuser
 mm_password: apipasswd
@@ -71,7 +71,7 @@ ranges:
 
 ===== Environment variables:
 
-The `ansilabnl.micetro.inventory` plugin can also be configured through environment
+The `menandmice.ansible_micetro.inventory` plugin can also be configured through environment
 variables
 
 ....
@@ -83,28 +83,28 @@ export MM_RANGES=YOUR_MM_RANGES
 ....
 
 When reading configuration from the environment, the inventory path must
-always be `@ansilabnl.micetro.inventory`.
+always be `@menandmice.ansible_micetro.inventory`.
 
 [source,bash]
 ----
-ansible-inventory -i @ansilabnl.micetro.inventory --list
+ansible-inventory -i @menandmice.ansible_micetro.inventory --list
 ----
 
 ===== Ansible configuration
 
-Ansible needs to know about the `ansilabnl.micetro.inventory` plugin and also has some
-extra configuration options. First the `ansilabnl.micetro.inventory` plugin needs to be
+Ansible needs to know about the `menandmice.ansible_micetro.inventory` plugin and also has some
+extra configuration options. First the `menandmice.ansible_micetro.inventory` plugin needs to be
 enabled, so Ansible can use it. This is done in the `[inventory]`
 section in the `ansible.cfg` file.
 
 ....
 [inventory]
-enable_plugins   = ansilabnl.micetro.inventory, host_list, auto
+enable_plugins   = menandmice.ansible_micetro.inventory, host_list, auto
 cache            = yes
 cache_plugin     = jsonfile
-cache_prefix     = ansilabnl.micetro.inv
+cache_prefix     = menandmice.ansible_micetro.inv
 cache_timeout    = 3600
-cache_connection = /tmp/ansilabnl.micetro.inventory_cache
+cache_connection = /tmp/menandmice.ansible_micetro.inventory_cache
 ....
 
 With the following meaning:

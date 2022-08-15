@@ -17,7 +17,7 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
 )
 
@@ -124,7 +124,7 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 - name: Set deinition for custom properties
- ansilabnl.micetro.props:
+ menandmice.ansible_micetro.props:
     name: location
     state: present
     proptype: text

@@ -18,7 +18,7 @@ __metaclass__ = type
 from ansible.errors import AnsibleError, AnsibleModuleError
 from ansible.module_utils.common.text.converters import to_text
 from ansible.plugins.lookup import LookupBase
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     TRUEFALSE,
 )
@@ -102,7 +102,7 @@ DOCUMENTATION = r"""
 EXAMPLES = r"""
 - name: get the first free IP address in a zone
   debug:
-    msg: "This is the next free IP: {{ lookup('ansilabnl.micetro.freeip', mm_provider, network) }}"
+    msg: "This is the next free IP: {{ lookup('menandmice.ansible_micetro.freeip', mm_provider, network) }}"
   vars:
     mm_provider:
       mm_url: http://mmsuite.example.net
@@ -112,7 +112,7 @@ EXAMPLES = r"""
 
 - name: get the first free IP addresses in multiple zones
   debug:
-    msg: "This is the next free IP: {{ query('ansilabnl.micetro.freeip', mm_provider, network, multi=5, claim=60) }}"
+    msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, multi=5, claim=60) }}"
   vars:
     mm_url: http://mmsuite.example.net
     mm_user: apiuser
@@ -123,7 +123,7 @@ EXAMPLES = r"""
 
   - name: get the first free IP address in a zone and ping
     debug:
-      msg: "This is the next free IP: {{ query('ansilabnl.micetro.freeip', mm_provider, network, ping=True) }}"
+      msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, ping=True) }}"
     vars:
       mm_url: http://mmsuite.example.net
       mm_user: apiuser

@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.zone
+=== menandmice.ansible_micetro.zone
 
 Manage DNS zones in Men&Mice Micetro
 
@@ -12,7 +12,7 @@ Manage DNS zones in Men&Mice Micetro
   string `[Active Directory]` if the zone is integrated in the Active
   Directory.
 - `customproperties`: Custom properties for the zone. These properties
-  must already exist. See also [ansilabnl.micetro.props].
+  must already exist. See also [menandmice.ansible_micetro.props].
 - `dynamic`: Dynamic DNS zone.
 - `masters`: The IP addresses of the master servers if the new zone is
   not a master zone.
@@ -29,7 +29,7 @@ Manage DNS zones in Men&Mice Micetro
 [source,yaml]
 ----
 - name: Create a new zone
-  ansilabnl.micetro.zone:
+  menandmice.ansible_micetro.zone:
     state: present
     name: example.com
     nameserver: ns1.example.com
@@ -40,7 +40,7 @@ Manage DNS zones in Men&Mice Micetro
   delegate_to: localhost
 
 - name: Release a zone
-  ansilabnl.micetro.zone:
+  menandmice.ansible_micetro.zone:
     state: absent
     name: example.com
     mm_provider: "{{ mm_provider }}"

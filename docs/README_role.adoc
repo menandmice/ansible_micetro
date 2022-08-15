@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.role
+=== menandmice.ansible_micetro.role
 
 Manage roles on Men&Mice Micetro
 
@@ -17,7 +17,7 @@ Manage roles on Men&Mice Micetro
 [source,yaml]
 ----
 - name: Add the 'local' role
-  ansilabnl.micetro.role:
+  menandmice.ansible_micetro.role:
     name: local
     desc: A local role
     state: present
@@ -25,7 +25,7 @@ Manage roles on Men&Mice Micetro
   delegate_to: localhost
 
 - name: Remove the 'local' role
-  ansilabnl.micetro.role:
+  menandmice.ansible_micetro.role:
     name: local
     state: absent
     mm_provider: "{{ mm_provider }}"

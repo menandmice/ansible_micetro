@@ -17,7 +17,7 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ansilabnl.micetro.plugins.module_utils.micetro import (
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
 )
@@ -116,7 +116,7 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 - name: Create a new zone
- ansilabnl.micetro.zone:
+ menandmice.ansible_micetro.zone:
     state: present
     name: example.com
     nameserver: ns1.example.com
@@ -130,7 +130,7 @@ EXAMPLES = r"""
   delegate_to: localhost
 
 - name: Release a zone
- ansilabnl.micetro.zone:
+ menandmice.ansible_micetro.zone:
     state: absent
     name: example.com
     mm_provider:

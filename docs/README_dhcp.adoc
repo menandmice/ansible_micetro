@@ -1,4 +1,4 @@
-=== ansilabnl.micetro.dhcp
+=== menandmice.ansible_micetro.dhcp
 
 Manage DHCP reservations on Men&Mice Micetro
 
@@ -23,7 +23,7 @@ Manage DHCP reservations on Men&Mice Micetro
 [source,yaml]
 ----
 - name: Add a reservation for an IP address
-  ansilabnl.micetro.dhcp:
+  menandmice.ansible_micetro.dhcp:
     state: present
     name: myreservation
     ipaddress: 172.16.17.8
