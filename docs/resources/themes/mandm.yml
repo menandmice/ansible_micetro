@@ -65,11 +65,12 @@ description-list:
   term-font-color: #000000
   term-spacing: 0.2
 
-outline_list:
+list:
   item_spacing: 1
   marker-font-color: #000000
 
 conum:
+  font-family: FreeFont Serif
   font-color: #323232
   #font-size: round($base-font-size * 0.85)
   #line-height: 1.0
@@ -149,7 +150,7 @@ image:
     align: inherit
     side: bottom
 
-literal:
+codepage:
   font-family: FreeFont Mono
   font-color: #1111ff
   font-size: round($base_font_size * 0.85)

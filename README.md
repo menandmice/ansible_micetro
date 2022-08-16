@@ -27,7 +27,8 @@ The collection needs to be installed on the Ansible control node and
 Ansible needs to be configured so that the collection can be found by
 Ansible.
 
-For the complete documentation, see the `docs` directory.
+For the complete documentation, see the `docs` directory or read the
+[README.pdf](docs/README.pdf) from the docs directory.
 
 Please enjoy,\
 &nbsp;&nbsp;&nbsp;&nbsp;The Men&Mice Team

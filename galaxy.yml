@@ -1,7 +1,7 @@
 ---
 namespace: menandmice
 name: ansible_micetro
-version: 1.0.3
+version: 1.0.4
 readme: README.md
 authors:
   - Ton Kersten <t.kersten@atcomputing.nl>
@@ -19,7 +19,7 @@ tags:
   - automation
 repository: https://github.com/menandmice/ansible_micetro
 homepage: https://menandmice.com/
-documentation: https://github.com/menandmice/ansible_micetro/docs
+documentation: https://github.com/menandmice/ansible_micetro/
 issues: https://github.com/menandmice/ansible_micetro/issues
 dependencies: {}
 build_ignore:
