@@ -28,7 +28,8 @@ Ansible needs to be configured so that the collection can be found by
 Ansible.
 
 For the complete documentation, see the `docs` directory or read the
-[README.pdf](docs/README.pdf) from the docs directory.
+[README.pdf](https://github.com/menandmice/ansible_micetro/blob/main/docs/README.pdf)
+from the docs directory.
 
 Please enjoy,\
 &nbsp;&nbsp;&nbsp;&nbsp;The Men&Mice Team
