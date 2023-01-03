@@ -10,7 +10,7 @@
 # python 3 headers, required if submitting to Ansible
 """Ansible inventory plugin.
 
-Inventory plugin for finding all hosts in an Men&Mice Suite
+Inventory plugin for finding all hosts in Micetro.
 As this could a lot, use the 'filter' option to tune it down.
 """
 
