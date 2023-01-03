@@ -39,7 +39,7 @@ DOCUMENTATION = """
     extends_documentation_fragment:
       - inventory_cache
     description:
-      - Reads inventories from Men&Mice Suite.
+      - Reads inventories from Micetro
       - Supports reading configuration from both YAML config file and environment variables.
       - If reading from the YAML file, the file name must be
         micetro.(yml|yaml), micetro_inv.(yml|yaml) or micetro_inventory.(yml|yaml), the path
@@ -57,19 +57,19 @@ DOCUMENTATION = """
         required: True
         choices: ['menandmice.ansible_micetro.inventory']
       mm_url:
-        description: The network address of the Men&Mice Micetro host
+        description: The network address of the Micetro host
         type: string
         env:
           - name: MM_HOST
         required: True
       mm_user:
-        description: The user that you plan to use to access inventories on your Men&Mice Micetro
+        description: The user that you plan to use to access inventories on your Micetro
         type: string
         env:
           - name: MM_USER
         required: True
       mm_password:
-        description: The password for your your Men&Mice Micetro user
+        description: The password for your your Micetro user
         type: string
         env:
           - name: MM_PASSWORD
@@ -148,7 +148,7 @@ cache_connection = /tmp/micetro_inv_cache
 # export MM_FILTERS=YOUR_MM_FILTERS
 # export MM_RANGES=YOUR_MM_RANGES
 
-# Read the inventory from the Men&Mice Suite, and list them.
+# Read the inventory from Micetro, and list them.
 # The inventory path must always be @micetro_inventory if you are reading
 # all settings from environment variables.
 # ansible-inventory -i @micetro_inventory --list
