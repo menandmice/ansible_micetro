@@ -1,10 +1,9 @@
-# Ansible Integration for Men&Mice Micetro
+# Ansible Integration for Micetro
 
-First edited on January 3, 2023.
 
-## What is Men&Mice Micetro?
+## What is Micetro?
 
-Effectively and efficiently manage DNS, DHCP and IPAM with Men&Mice
+Effectively and efficiently manage DNS, DHCP and IPAM with
 Micetro.
 
 Easily manage DNS and DHCP servers and networking devices such as
@@ -12,17 +11,16 @@ firewalls and routers. Get the visibility and management functionality
 you need across your entire network, whether on-prem, hybrid or
 multi-cloud.
 
-The Men&Mice Web Application enables quick access to the most commonly
-used DNS and DHCP management functions and reports of the Men&Mice
-Suite.
+Micetro enables quick access to the most commonly
+used DNS and DHCP management functions and reports of Micetro.
 
 See also: https://www.menandmice.com
 
 ## Ansible integration
 
-With the Ansible collection for Men&Mice Micetro you can manage
-a Men&Mice Micetro installation through Ansible. The Ansible modules and
-plugins connect to the Men&Mice Micetro API and perform all needed
+With the Ansible collection for Micetro you can manage
+a Micetro installation through Ansible. The Ansible modules and
+plugins connect to the Micetro API and perform all needed
 actions.
 
 The collection needs to be installed on the Ansible control node and
