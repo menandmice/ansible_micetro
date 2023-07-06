@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 """Ansible Claim IP address module.
 
 Part of the Men&Mice Ansible integration
 
-Module to claim IP addresses in DHCP in the Men&Mice Suite
+Module to claim IP addresses in DHCP in the Micetro
 """
 
 from __future__ import absolute_import, division, print_function
@@ -24,12 +24,12 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
 
 DOCUMENTATION = r"""
   module: claimip
-  short_description: Claim IP addresses in DHCP in the Men&Mice Suite
+  short_description: Claim IP addresses in DHCP in the Micetro
   author:
     - Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
   version_added: "2.7"
   description:
-    - Claim IP addresses in DHCP in the Men&Mice Suite.
+    - Claim IP addresses in DHCP in the Micetro.
     - These addresses can not be in a DHCP range.
   notes:
     - When in check mode, this module pretends to have done things
@@ -55,7 +55,7 @@ DOCUMENTATION = r"""
       type: dict
       required: False
     mm_provider:
-      description: Definition of the Men&Mice suite API mm_provider.
+      description: Definition of the Micetro API mm_provider.
       type: dict
       required: True
       suboptions:
@@ -80,7 +80,7 @@ EXAMPLES = r"""
     state: present
     ipaddress: 172.16.12.14
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost
@@ -93,7 +93,7 @@ EXAMPLES = r"""
       - 172.16.12.15
       - 172.16.12.16
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost

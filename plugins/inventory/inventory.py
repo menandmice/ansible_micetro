@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 #
@@ -100,7 +100,7 @@ EXAMPLES = """
 # Examples using micetro_inventory.yml file
 
 plugin: menandmice.ansible_micetro.inventory
-mm_url: "http://mmsuite.example.net"
+mm_url: "http://micetro.example.net"
 mm_user: apiuser
 mm_password: apipasswd
 filters:
@@ -108,7 +108,7 @@ filters:
 
 
 plugin: menandmice.ansible_micetro.inventory
-mm_url: "http://mmsuite.example.net"
+mm_url: "http://micetro.example.net"
 mm_user: apiuser
 mm_password: apipasswd
 ranges:
@@ -210,7 +210,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
 
           This is the dictionairy that will cached, if requested (2.8+)
         """
-        # Read inventory from Men&Mice Suite server
+        # Read inventory from Micetro server
 
         # Get the needed connection information
         mm_url = self.get_option("mm_url")

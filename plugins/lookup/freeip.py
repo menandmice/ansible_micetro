@@ -9,7 +9,7 @@
 """Ansible lookup plugin.
 
 Lookup plugin for finding the next free IP address in
-a network zone in the Men&Mice Suite.
+a network zone in the Micetro.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -27,7 +27,7 @@ DOCUMENTATION = r"""
     lookup: freeip
     author: Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
     version_added: "2.7"
-    short_description: Find free IP address(es) in a given network range in the Men&Mice Suite
+    short_description: Find free IP address(es) in a given network range in the Micetro
     description:
       - This lookup returns free IP address(es) in a range or ranges
         specified by the network names C(e.g. examplenet). This can be
@@ -39,7 +39,7 @@ DOCUMENTATION = r"""
         over which you can iterate later on (or use C(query) instead)
     options:
       mm_provider:
-        description: Definition of the Men&Mice suite API mm_provider
+        description: Definition of the Micetro API mm_provider
         type: dict
         required: True
         suboptions:
@@ -91,8 +91,8 @@ DOCUMENTATION = r"""
         default: None
       filter:
         description:
-          - Men&Mice Suite filter statement
-          - Filter validation is done by the Men&Mice suite, not in the plugin
+          - Micetro filter statement
+          - Filter validation is done by the Micetro, not in the plugin
           - More filter info on https://docs.menandmice.com/display/MM930/Quickfilter
         type: str
         required: False
@@ -105,7 +105,7 @@ EXAMPLES = r"""
     msg: "This is the next free IP: {{ lookup('menandmice.ansible_micetro.freeip', mm_provider, network) }}"
   vars:
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
     network: examplenet
@@ -114,7 +114,7 @@ EXAMPLES = r"""
   debug:
     msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, multi=5, claim=60) }}"
   vars:
-    mm_url: http://mmsuite.example.net
+    mm_url: http://micetro.example.net
     mm_user: apiuser
     mm_passwd: apipasswd
     network:
@@ -125,7 +125,7 @@ EXAMPLES = r"""
     debug:
       msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, ping=True) }}"
     vars:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_passwd: apipasswd
       network: examplenet
@@ -145,7 +145,7 @@ class LookupModule(LookupBase):
     def run(self, terms, variables=None, **kwargs):
         """Variabele terms contains a list with supplied parameters.
 
-        - mm_provider -> Definition of the Men&Mice suite API mm_provider
+        - mm_provider -> Definition of the Micetro API mm_provider
         - Network  -> The zone from which the free IP address(es) are found
                       Either: CIDR notation, network notation or network name
                       e.g. 172.16.17.0/24 or 172.16.17.0 or examplenet

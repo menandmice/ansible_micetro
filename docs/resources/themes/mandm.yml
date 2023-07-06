@@ -22,21 +22,6 @@ font:
       italic: FreeMonoOblique.ttf
       bold: FreeMonoBold.ttf
       bold_italic: FreeMonoBoldOblique.ttf
-    # Symbol
-    OpenSymbol:
-      "*": OpenSymbol.ttf
-    # M+ 1mn supports ASCII and the circled numbers used for conums
-    M+ 1mn:
-      normal: GEM_FONTS_DIR/mplus1mn-regular-subset.ttf
-      bold: GEM_FONTS_DIR/mplus1mn-bold-subset.ttf
-      italic: GEM_FONTS_DIR/mplus1mn-italic-subset.ttf
-      bold_italic: GEM_FONTS_DIR/mplus1mn-bold_italic-subset.ttf
-    # Default font for fallback
-    Noto Serif:
-      normal: GEM_FONTS_DIR/notoserif-regular-subset.ttf
-      bold: GEM_FONTS_DIR/notoserif-bold-subset.ttf
-      italic: GEM_FONTS_DIR/notoserif-italic-subset.ttf
-      bold_italic: GEM_FONTS_DIR/notoserif-bold_italic-subset.ttf
 
 base:
   font-family: FreeFont Serif
@@ -47,6 +32,9 @@ base:
 
 heading:
   font-family: FreeFont Sans
+
+heading-h2:
+  font-color: #006699
 
 page:
   # Margins: top right bottom left
@@ -70,10 +58,10 @@ list:
   marker-font-color: #000000
 
 conum:
-  font-family: FreeFont Serif
-  font-color: #323232
-  #font-size: round($base-font-size * 0.85)
-  #line-height: 1.0
+  font-color: #006699
+  font-family: FreeFont Sans
+  font-size: round($base-font-size * 0.95)
+  line-height: 1.0
   # This gives inverse callouts (like: ❶ )
   # For open callouts comment this line
   #glyphs: \u2776-\u277f,\u24eb-\u24f4
@@ -141,37 +129,55 @@ title-page:
     margin-bottom: 10
 
 table:
+  body:
+    stripe-background-color: #efefef
   caption:
     align: center
     side: bottom
+    font-size: round($base_font_size * 0.8)
 
 image:
   caption:
     align: inherit
     side: bottom
 
-codepage:
+# inline code
+codespan:
   font-family: FreeFont Mono
-  font-color: #1111ff
-  font-size: round($base_font_size * 0.85)
+  font-color: #110077
+  font-size: round($base_font_size * 0.9)
   caption:
-    align: inherit
+    align: center
     side: bottom
 
-listing:
-  font-family: FreeFont Mono
-  font-color: #1111ff
-  font-size: round($base_font_size * 0.85)
-  caption:
-    align: left
-    side: bottom
-
+# code blocks
 code:
   font-family: FreeFont Mono
-  font-size: round($base_font_size * 0.85)
+  font-size: round($base_font_size * 0.8)
+  background-color: #eff6fa
   caption:
-    align: left
+    align: center
     side: bottom
+
+# Background color for Rouge if no style is used
+code-highlight:
+  background-color: #eff6fa
+
+# listing
+listing:
+  font-family: FreeFont Mono
+  font-size: round($base_font_size * 0.8)
+  background-color: #e9f6fa
+  caption:
+    align: center
+    side: bottom
+
+sidebar:
+  font-family: FreeFont Mono
+  font-size: $base_font_size
+  font-color: #000000
+  background-color: #8ebfba
+  border-color: #0000
 
 role:
   hfs:
@@ -190,6 +196,22 @@ role:
     font-size: round($base_font_size * 0.8)
   tiny:
     font-size: round($base_font_size * 0.6)
+  tns:
+    font-color: #000000
+    background-color: #8ebfba
+  conum:
+    font-family: FreeFont Sans
+    font-size: round($base-font-size * 0.90)
+    font-color: #006699
+  note:
+    font-size: round($base-font-size * 0.90)
+    font-color: #19407c
+  warning:
+    font-size: round($base-font-size * 0.90)
+    font-color: #bf6900
+  important:
+    font-size: round($base-font-size * 0.90)
+    font-color: #bf0000
   red:
     font-color: #ff0000
   white:

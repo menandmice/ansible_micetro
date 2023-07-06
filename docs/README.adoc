@@ -5,7 +5,7 @@ include::resources/adocs/includes.adoc[]
 :toclevels: 3
 :organization: Men&Mice
 :revnumber: {version} ({localdate})
-:revdate: 2022-05-30
+:revdate: 2023-07-06
 :reproducible:
 :figure-caption: Table
 :figure-caption: Figure

@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 """Ansible user module.
 
 Part of the Men&Mice Ansible integration
 
-Module to manage users in the Men&Mice Suite.
+Module to manage users in the Micetro.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -24,13 +24,13 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
 
 DOCUMENTATION = r"""
   module: user
-  short_description: Manage user accounts and user properties on the Men&Mice Suite
+  short_description: Manage user accounts and user properties on the Micetro
   author:
     - Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
     - Carsten Strotmann <carsten@menandmice.training>
   version_added: "2.7"
   description:
-    - Manage user accounts and user attributes on a Men&Mice Suite installation
+    - Manage user accounts and user attributes on a Micetro installation
   notes:
     - When in check mode, this module pretends to have done things
       and returns C(changed = True).
@@ -79,7 +79,7 @@ DOCUMENTATION = r"""
       type: list
       elements: str
     mm_provider:
-      description: Definition of the Men&Mice suite API mm_provider.
+      description: Definition of the Micetro API mm_provider.
       type: dict
       required: True
       suboptions:
@@ -115,7 +115,7 @@ EXAMPLES = r"""
       - Approvers (built-in)
       - Requesters (built-in)
   mm_provider:
-    mm_url: http://mmsuite.example.net
+    mm_url: http://micetro.example.net
     mm_user: apiuser
     mm_password: apipasswd
   delegate_to: localhost
@@ -125,7 +125,7 @@ EXAMPLES = r"""
     username: johnd
     state: absent
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost
@@ -133,7 +133,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 message:
-    description: The output message from the Men&Mice Suite.
+    description: The output message from the Micetro.
     type: str
     returned: always
 """
@@ -338,9 +338,10 @@ def run_module():
                 ):
                     # Wanted but not yet present.
                     http_method = "PUT"
-                elif (thisgrp not in wanted_groups) and (
-                    thisgrp in user_data["groups"] and (
-                    thisgrp["name"] != "All users"
+                elif (
+                    (thisgrp not in wanted_groups)
+                    and (thisgrp in user_data["groups"])
+                    and (thisgrp["name"] != "All users")
                 ):
                     # Present, but not wanted
                     http_method = "DELETE"

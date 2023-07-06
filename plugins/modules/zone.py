@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 """Ansible Zone Management module.
 
 Part of the Men&Mice Ansible integration
 
-Module to manage DNS-Zones in the Men&Mice Suite
+Module to manage DNS-Zones in the Micetro
 """
 
 from __future__ import absolute_import, division, print_function
@@ -24,12 +24,12 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
 
 DOCUMENTATION = r"""
   module: zone
-  short_description: Manage DNS zones in the Men&Mice Suite
+  short_description: Manage DNS zones in the Micetro
   author:
     - Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
   version_added: "2.7"
   description:
-    - Manage DNS zones in the Men&Mice Suite
+    - Manage DNS zones in the Micetro
   notes:
     - When in check mode, this module pretends to have done things
       and returns C(changed = True).
@@ -95,7 +95,7 @@ DOCUMENTATION = r"""
       type: dict
       required: False
     mm_provider:
-      description: Definition of the Men&Mice suite API mm_provider.
+      description: Definition of the Micetro API mm_provider.
       type: dict
       required: True
       suboptions:
@@ -120,11 +120,11 @@ EXAMPLES = r"""
     state: present
     name: example.com
     nameserver: ns1.example.com
-    authority: mmsuite.example.net
+    authority: micetro.example.net
     customproperties:
       location: Reykjavik
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost
@@ -134,7 +134,7 @@ EXAMPLES = r"""
     state: absent
     name: example.com
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost
@@ -358,7 +358,7 @@ def run_module():
                 props.append({"name": key, "value": val})
             databody["dnsZone"]["customProperties"] = props
 
-        # Create the zone on the Men&Mice Suite
+        # Create the zone on the Micetro
         result = doapi(url, http_method, mm_provider, databody)
 
     # return collected results

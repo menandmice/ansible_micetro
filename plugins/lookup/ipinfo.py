@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 #
@@ -9,7 +9,7 @@
 """Ansible lookup plugin.
 
 Lookup plugin for finding information about an IP address
-in the Men&Mice Suite.
+in the Micetro.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -30,7 +30,7 @@ DOCUMENTATION = r"""
       - This lookup collects info of an IP address
     options:
       mm_provider:
-        description: Definition of the Men&Mice suite API mm_provider
+        description: Definition of the Micetro API mm_provider
         type: dict
         required: True
         suboptions:
@@ -60,7 +60,7 @@ EXAMPLES = r"""
     msg: "Info for IP: {{ lookup('menandmice.ansible_micetro.ipinfo', mm_provider, '172.16.17.2') }}"
   vars:
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
 
@@ -69,7 +69,7 @@ EXAMPLES = r"""
         msg: "{{ ipinfo['dhcpReservations'] }}"
   vars:
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
     ipinfo: "{{ query('menandmice.ansible_micetro.ipinfo', mm_provider, '172.16.17.2') }}"
@@ -89,7 +89,7 @@ class LookupModule(LookupBase):
     def run(self, terms, variables=None, **kwargs):
         """Variabele terms contains a list with supplied parameters.
 
-        - mm_provider  -> Definition of the Men&Mice suite API mm_provider
+        - mm_provider  -> Definition of the Micetro API mm_provider
         - IPAddress -> The IPAddress to examine
         """
         # Sufficient parameters

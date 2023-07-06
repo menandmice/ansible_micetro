@@ -5,7 +5,8 @@ Claim IP addresses in DHCP in Men&Mice Micetro
 ==== Options
 
 - `customproperties`: Custom properties for the IP address. These
-  properties must already exist. See also [menandmice.ansible_micetro.props]
+  properties must already exist. See also
+  xref:README_props.adoc#menandmice.ansible_micetro.props[menandmice.ansible_micetro.props].
 - `ipaddress`: (required) The IP address(es) to work on.
 - `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
 - `state`: The state of the claim. (`absent`, `present`)

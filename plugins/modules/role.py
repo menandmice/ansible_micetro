@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2020-2022, Men&Mice
+# Copyright: (c) 2020-2023, Men&Mice
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 """Ansible role module.
 
 Part of the Men&Mice Ansible integration
 
-Module to manage roles in the Men&Mice Suite.
+Module to manage roles in the Micetro.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -24,12 +24,12 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
 
 DOCUMENTATION = r"""
   module: role
-  short_description: Manage roles on the Men&Mice Suite
+  short_description: Manage roles on the Micetro
   author:
     - Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
   version_added: "2.7"
   description:
-    - Manage roles on a Men&Mice Suite installation
+    - Manage roles on a Micetro installation
   notes:
     - When in check mode, this module pretends to have done things
       and returns C(changed = True).
@@ -60,7 +60,7 @@ DOCUMENTATION = r"""
       type: list
       required: False
     mm_provider:
-      description: Definition of the Men&Mice suite API mm_provider.
+      description: Definition of the Micetro API mm_provider.
       type: dict
       required: True
       suboptions:
@@ -90,7 +90,7 @@ EXAMPLES = r"""
     groups:
       - my_local_group
   mm_provider:
-    mm_url: http://mmsuite.example.net
+    mm_url: http://micetro.example.net
     mm_user: apiuser
     mm_password: apipasswd
   delegate_to: localhost
@@ -100,7 +100,7 @@ EXAMPLES = r"""
     name: local
     state: absent
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipasswd
   delegate_to: localhost
@@ -108,7 +108,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 message:
-    description: The output message from the Men&Mice Suite.
+    description: The output message from the Micetro.
     type: str
     returned: always
 """

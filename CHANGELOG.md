@@ -1,6 +1,12 @@
 # Changelog
 
-- TonK - 2023-07-06
+- TonK - 2023-07-06 - Version 1.0.7
+  * Fixed a syntax error in `user.py`
+  * Changed `mmsuite` to `micetro`
+  * Changed 'Men&Mice Suite' into 'Micetro' globally
+  * Set the copyright year to 2023
+
+- TonK - 2023-07-06 - Version 1.0.6
   * Fixed issue 2 (hb9hnt - Beni)
     Removing user from "All users" group is not allowed
   * Fixed issue 3 (hb9hnt - Beni)

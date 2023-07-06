@@ -46,7 +46,7 @@ Example usage:
 
   vars:
     mm_provider:
-      mm_url: http://mmsuite.example.net
+      mm_url: http://micetro.example.net
       mm_user: apiuser
       mm_password: apipassword
     network: examplenet
