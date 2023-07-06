@@ -339,7 +339,8 @@ def run_module():
                     # Wanted but not yet present.
                     http_method = "PUT"
                 elif (thisgrp not in wanted_groups) and (
-                    thisgrp in user_data["groups"]
+                    thisgrp in user_data["groups"] and (
+                    thisgrp["name"] != "All users"
                 ):
                     # Present, but not wanted
                     http_method = "DELETE"

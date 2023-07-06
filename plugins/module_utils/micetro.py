@@ -31,7 +31,7 @@ def doapi(url, method, mm_provider, databody):
     Parameters:
         - url          -> Relative URL for the API entry point
         - method       -> The API method (GET, POST, DELETE,...)
-        - mm_provider     -> Needed credentials for the API mm_provider
+        - mm_provider  -> Needed credentials for the API mm_provider
         - databody     -> Data needed for the API to perform the task
 
     Returns:
@@ -58,7 +58,7 @@ def doapi(url, method, mm_provider, databody):
                 force_basic_auth=True,
                 url_username=mm_provider["mm_user"],
                 url_password=mm_provider["mm_password"],
-                data=json.dumps(databody),
+                data=json.dumps(databody, ensure_ascii=False).encode("utf8"),
                 validate_certs=False,
                 headers=headers,
             )
