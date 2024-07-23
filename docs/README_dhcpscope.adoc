@@ -1,0 +1,35 @@
+=== menandmice.ansible_micetro.dhcpscope
+
+Manage DHCP Scope configuration on Men&Mice Micetro
+
+==== Options
+
+- `state`: The state of the reservation. (`absent`, `present`)
+- `name`: (required) Name of the DHCP scope
+- `description`: Description of the DHCP scope
+- `enabled`: Whether or not the DHCP scope is enabled or not
+- `range_ref`: (required) Range reference for the DHCP scope
+- `dhcp_server_refs`: (required) DHCP server references for the DHCP scope
+- `options`: Define specific options for the DHCP scope
+- `save_comment`: Save comment left in Micetro for any changes
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Examples
+
+.DHCP scope configuration example
+[source,yaml]
+----
+- name: Manage DHCP scope with options
+  menandmice.ansible_micetro.dhcpscope:
+    state: present
+    name: My DHCP Scope
+    range_ref: Ranges/1
+    dhcp_server_refs:
+      - DHCPServers/1
+    options:
+      3:
+        - 1.1.1.1
+      51: 172800
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

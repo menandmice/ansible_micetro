@@ -5,6 +5,10 @@
 # GNU General Public License v3.0
 # see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt
 # All imports
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import time
 from ansible.errors import AnsibleError
 from ansible.module_utils._text import to_native
@@ -156,7 +160,7 @@ def get_single_refs(objname, mm_provider):
         resp["invalid"] = True
         return resp
 
-    return "Unknow error"
+    return "Unknown error"
 
 
 def get_dhcp_scopes(mm_provider, ipaddress):

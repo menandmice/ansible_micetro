@@ -1,10 +1,11 @@
 ---
 namespace: menandmice
 name: ansible_micetro
-version: 1.0.7
+version: 1.0.8
 readme: README.md
 authors:
   - Ton Kersten <t.kersten@atcomputing.nl>
+  - Adam Brauns (@abrauns-silex)
 description: Collection to manage the Men&Mice Micetro environment with Ansible
 # https://www.gnu.org/licenses/gpl-3.0-standalone.html
 license:
