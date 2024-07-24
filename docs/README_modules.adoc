@@ -14,6 +14,8 @@ include::README_ipprops.adoc[]
 
 include::README_dhcp.adoc[]
 
+include::README_dhcpscope.adoc[]
+
 include::README_zone.adoc[]
 
 include::README_dnsrecord.adoc[]
