@@ -1,5 +1,8 @@
 # Changelog
 
+- abrauns-silex - 2024-07-23 - Version 1.0.8
+  * Added dhcpscope module
+
 - TonK - 2023-07-06 - Version 1.0.7
   * Fixed a syntax error in `user.py`
   * Changed `mmsuite` to `micetro`
