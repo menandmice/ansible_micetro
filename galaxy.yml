@@ -1,7 +1,7 @@
 ---
 namespace: menandmice
 name: ansible_micetro
-version: 1.0.8
+version: 1.0.9
 readme: README.md
 authors:
   - Ton Kersten <t.kersten@atcomputing.nl>
