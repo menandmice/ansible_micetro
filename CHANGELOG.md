@@ -1,5 +1,8 @@
 # Changelog
 
+- abrauns-silex - 2024-07-29 - Version 1.0.9
+  * Minor improvements to error handling for the dhcpscope module
+
 - abrauns-silex - 2024-07-23 - Version 1.0.8
   * Added dhcpscope module
 

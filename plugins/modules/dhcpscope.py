@@ -210,7 +210,7 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    # Get all API settings
+    # Gather all module parameters
     mm_provider = module.params["mm_provider"]
     state = module.params["state"]
     name = module.params["name"]
@@ -220,6 +220,25 @@ def run_module():
     dhcp_server_refs = module.params["dhcp_server_refs"]
     options = module.params["options"]
     save_comment = module.params["save_comment"]
+
+    # Ensure range reference is present
+    resp = get_single_refs(range_ref, mm_provider)
+    if resp.get("invalid", None):
+        module.fail_json(
+            msg="Range reference not found, please try again",
+            range_ref=range_ref,
+            response=resp
+        )
+
+    # Ensure DHCP server reference(s) are present
+    for dhcp_server_ref in dhcp_server_refs:
+        resp = get_single_refs(dhcp_server_ref, mm_provider)
+        if resp.get("invalid", None):
+            module.fail_json(
+                msg="DHCP server reference not found, please try again",
+                dhcp_server_ref=dhcp_server_ref,
+                response=resp
+            )
 
     for dhcp_server_ref in dhcp_server_refs:
 
@@ -232,13 +251,12 @@ def run_module():
                 response=resp
             )
 
-        # Ensure there aren't multiple scopes returned
+        # Ensure no more than one DHCP scope is returned
         total_results = resp["totalResults"]
         if total_results > 1:
             module.fail_json(
                 msg="More than one DHCP scope found, unable to take action",
-                dhcp_scopes=resp["dhcpScopes"],
-                total_results=total_results
+                response=resp
             )
 
         # Ensure DHCP scope is present
@@ -259,6 +277,7 @@ def run_module():
                     },
                     "saveComment": save_comment
                 }
+
                 api_result = doapi(url, http_method, mm_provider, databody)
                 if api_result["changed"]:
                     result.update({
@@ -266,19 +285,17 @@ def run_module():
                         "message": present_change_message
                     })
 
-                # Ensure the creation results in one DHCP scope
+                # Ensure the creation was successful
                 resp = get_single_refs(refs, mm_provider)
-                total_results = resp["totalResults"]
-                if total_results != 1:
+                if resp["totalResults"] != 1:
                     module.fail_json(
                         msg="Creation of DHCP scope did not produce a DHCP scope, unable to take action",
-                        dhcp_scopes=resp["dhcpScopes"],
-                        total_results=total_results
+                        response=resp
                     )
 
-            ref = resp["dhcpScopes"][0]["ref"]
+            # Ensure DHCP scope options are updated if necessary
             if options:
-                # Format options parameter
+                # Format options for payload
                 formatted_options = []
                 for key, value in options.items():
                     if isinstance(value, list):
@@ -288,16 +305,16 @@ def run_module():
                         "value": str(value)
                     })
 
-                # Check to see if the options are different
+                # Check to see if the DHCP scope options differ
                 options_needs_update = False
-                url = "%s/Options" % ref
+                url = "%s/Options" % resp["dhcpScopes"][0]["ref"]
                 option_resp = get_single_refs(url, mm_provider)
                 for formatted_option in formatted_options:
                     if formatted_option not in option_resp["dhcpOptions"]:
                         options_needs_update = True
                         break
 
-                # Update the options if they are different
+                # Update the DHCP scope options if necessary
                 if options_needs_update:
                     http_method = "PUT"
                     databody = {
@@ -305,6 +322,14 @@ def run_module():
                         "saveComment": save_comment
                     }
                     api_result = doapi(url, http_method, mm_provider, databody)
+
+                    # Ensure scope options were set properly
+                    if api_result.get("warnings", None):
+                        module.fail_json(
+                            msg="DHCP scope present but failed to set options, please try again",
+                            response=api_result
+                        )
+
                     if api_result["changed"]:
                         result.update({
                             "changed": True,
