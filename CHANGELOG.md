@@ -1,5 +1,9 @@
 # Changelog
 
+- TonK - 2024-08-13 - Version 1.0.10
+  * Added primary zone check as suggested by Andrew McCann
+    in issue 7
+
 - abrauns-silex - 2024-07-29 - Version 1.0.9
   * Minor improvements to error handling for the dhcpscope module
 
