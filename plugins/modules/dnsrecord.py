@@ -277,8 +277,10 @@ def run_module():
     else:
         for zr in zoneresp["dnsZones"]:
             if zr["name"] == rrzone:
-                zoneref = zr["ref"]
-                break
+                if zr["type"] == "Primary":
+                    if "dnsScopeName" not in zr:
+                        zoneref = zr["ref"]
+                        break
 
     # And try to get the DNS record with this data
     # DNSRecords?filter=name=host2 and type=A and data=192.168.10.11
