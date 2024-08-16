@@ -270,7 +270,7 @@ def run_module():
         }
         # Add extra parameters, if requested.
         masters = module.params.get("masters", None)
-        if module.params["servtype"] != "Master" and masters is not None:
+        if module.params["servtype"] not in ["Primary", "Master"] and masters is not None:
             databody["properties"].append({"name": "masters", "value": masters})
         if module.params.get("adIntegrated"):
             databody["properties"].append(
@@ -336,7 +336,7 @@ def run_module():
         }
         # Add extra parameters, if requested.
         masters = module.params.get("masters", None)
-        if module.params["servtype"] != "Master" and masters is not None:
+        if module.params["servtype"] not in ["Primary", "Master"] and masters is not None:
             databody["masters"] = masters
         if module.params.get("adintegrated"):
             databody["dnsZone"]["adIntegrated"] = module.params.get(
