@@ -1,5 +1,9 @@
 # Changelog
 
+- TonK - 2024-08-16 - Version 1.0.11
+  * Fix multiple domain bug as suggested by Andrew McCann
+    in issue 8
+
 - TonK - 2024-08-13 - Version 1.0.10
   * Added primary zone check as suggested by Andrew McCann
     in issue 7

@@ -300,12 +300,11 @@ def run_module():
     # It could be that the result is empty. This sometimes happens when
     # a record is stored with just the name and not the FQDN. This depends on
     # the recordtype
-    rrname = module.params.get("name")
     if len(iparesp.get("dnsRecords", [])) == 0:
-        rrname = rrname.split(".")[0]
+        rrname_short = rrname.split(".")[0]
         refs = "%s/DNSRecords?filter=name=%s and type=%s and data=%s" % (
             zoneref,
-            rrname,
+            rrname_short,
             rrtype,
             rrdata,
         )
