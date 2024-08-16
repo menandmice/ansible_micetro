@@ -277,7 +277,7 @@ def run_module():
     else:
         for zr in zoneresp["dnsZones"]:
             if zr["name"] == rrzone:
-                if zr["type"] == "Primary":
+                if zr["type"] in ["Primary", "Master"]:
                     if "dnsScopeName" not in zr:
                         zoneref = zr["ref"]
                         break
