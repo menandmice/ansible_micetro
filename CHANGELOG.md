@@ -1,5 +1,8 @@
 # Changelog
 
+- abrauns-silex - 2025-04-08 - Version 1.0.13
+  * Added dhcpscope_info module
+
 - TonK - 2024-08-16 - Version 1.0.12
   * Fix "Primary" or "Master" API naming scheme by Andrew McCann
 
