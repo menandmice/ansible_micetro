@@ -5,7 +5,7 @@ include::resources/adocs/includes.adoc[]
 :toclevels: 3
 :organization: Men&Mice
 :revnumber: {version} ({localdate})
-:revdate: 2023-07-06
+:revdate: 2025-04-18
 :reproducible:
 :figure-caption: Table
 :figure-caption: Figure
@@ -16,6 +16,7 @@ include::resources/adocs/includes.adoc[]
 :version-label!:
 :media: prepress
 :optimize: prepress
+:pdf-version: 1.7
 :compress:
 :xrefstyle: full
 :experimental:
