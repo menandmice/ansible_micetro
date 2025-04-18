@@ -1,0 +1,26 @@
+=== menandmice.ansible_micetro.dhcpscope_info
+
+Gather DHCP Scope information on Men&Mice Micetro
+
+==== Options
+
+- `name`: Name of the DHCP scope
+- `limit`: Number of results to limit search to
+- `format_options`: Whether or not to format the DHCP scope options
+- `gather_options`: Whether or not include the DHCP scope options
+- `search_method`: The method to search for the DHCP scope
+- `sort_by`: What property to search for the scope by
+- `sort_order`: Ascending or descending order
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Examples
+
+.DHCP scope configuration example
+[source,yaml]
+----
+- name: Manage DHCP scope with options
+  menandmice.ansible_micetro.dhcpscope_info:
+    name: My DHCP Scope
+    limit: 10
+    mm_provider: "{{ mm_provider }}"
+----
