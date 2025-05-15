@@ -239,7 +239,7 @@ def run_module():
     # Generate URL for API call
     query = ["DHCPScopes?"]
     if name:
-        query.append("filter=name=%s%s" % (search_method, name))
+        query.append('filter=name=%s"%s"' % (search_method, name.replace(" ", "%20")))
 
     if limit:
         query.append("limit=%s" % (limit))

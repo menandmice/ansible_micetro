@@ -1,5 +1,8 @@
 # Changelog
 
+- abrauns-silex - 2025-05-14 - Version 1.0.14
+  * Fixed a minor bug when a dhcpscope contains a space in `dhcpscope` and `dhcpscope_info`
+
 - abrauns-silex - 2025-04-08 - Version 1.0.13
   * Added dhcpscope_info module
 

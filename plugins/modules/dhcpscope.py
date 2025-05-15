@@ -243,7 +243,10 @@ def run_module():
     for dhcp_server_ref in dhcp_server_refs:
 
         # Look up DHCP scope
-        refs = "DHCPScopes?filter=name=%s%%20AND%%20rangeRef=%s%%20AND%%20dhcpServerRef=%s" % (name, range_ref, dhcp_server_ref)
+        refs = (
+            'DHCPScopes?filter=name="%s"%%20AND%%20rangeRef=%s%%20AND%%20dhcpServerRef=%s'
+            % (name.replace(" ", "%20"), range_ref, dhcp_server_ref)
+        )
         resp = get_single_refs(refs, mm_provider)
         if resp.get("invalid", None):
             module.fail_json(
