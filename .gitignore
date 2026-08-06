@@ -10,3 +10,5 @@ __pycache__/
 *.gz
 .cache
 local/
+.venv/
+.tox/

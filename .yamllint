@@ -3,6 +3,8 @@ extends: default
 
 ignore: |
   .tox
+  .venv
+  .venv-test
   .github
   docs
   galaxy.yml
