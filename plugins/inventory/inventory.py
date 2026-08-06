@@ -26,9 +26,9 @@ from ansible import constants as C
 from ansible.errors import AnsibleParserError
 from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
+    MicetroAPIError,
     doapi,
 )
-
 
 DOCUMENTATION = """
     name: inventory
@@ -248,9 +248,12 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
 
         # Get all IP ranges
         http_method = "GET"
-        url = "Ranges"
+        url = "ranges"
         databody = {}
-        result = doapi(url, http_method, mm_provider, databody)
+        try:
+            result = doapi(url, http_method, mm_provider, databody)
+        except MicetroAPIError as err:
+            raise AnsibleParserError(str(err))
 
         # Find all child ranges, to prevent checking everything
         children = []
@@ -269,13 +272,18 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                         )
 
         # Now that we have all child-ranges, find all active IP's in these
-        # ranges
+        # ranges. There is no equivalent of the old, unversioned API's
+        # `command/GetIPAMRecords` RPC-style endpoint in the current API;
+        # each range's assigned IPAM records are fetched individually via
+        # its own sub-resource instead.
         http_method = "GET"
-        url = "command/GetIPAMRecords"
         for child in children:
-            # Construct the JSON databody
-            databody = {"filter": "state=Assigned", "rangeRef": child["name"]}
-            result = doapi(url, http_method, mm_provider, databody)
+            url = "%s/ipamRecords?filter=state=Assigned" % child["ref"]
+            databody = {}
+            try:
+                result = doapi(url, http_method, mm_provider, databody)
+            except MicetroAPIError as err:
+                raise AnsibleParserError(str(err))
 
             # All IPAM records in the range are retrieved. Split it out
             for ipam in result["message"]["result"]["ipamRecords"]:

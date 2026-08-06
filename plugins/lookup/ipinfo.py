@@ -18,6 +18,7 @@ __metaclass__ = type
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
+    MicetroAPIError,
     doapi,
 )
 
@@ -104,9 +105,12 @@ class LookupModule(LookupBase):
 
         # Call the API to find info
         http_method = "GET"
-        url = "%s/%s" % ("IPAMRecords", ipaddress)
+        url = "%s/%s" % ("ipamRecords", ipaddress)
         databody = {}
-        result = doapi(url, http_method, mm_provider, databody)
+        try:
+            result = doapi(url, http_method, mm_provider, databody)
+        except MicetroAPIError as err:
+            raise AnsibleError(str(err))
 
         # An error occured?
         if result.get("warnings", None):

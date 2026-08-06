@@ -157,7 +157,7 @@ def run_module():
     for ipaddress in module.params["ipaddress"]:
         # Get the IP address and find the reference
         # If the 'invalid' key exists, the request failed.
-        refs = "IPAMRecords/%s" % ipaddress
+        refs = "ipamRecords/%s" % ipaddress
         resp = get_single_refs(refs, mm_provider)
         if resp.get("invalid", None):
             result.pop("message", None)

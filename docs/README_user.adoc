@@ -6,7 +6,7 @@ Manage user accounts and user properties on Men&Mice Micetro
 
 - `authentication_type`: Authentication type to use. e.g. Internal, AD.
   Required if `state=present`.
-- `descr`: Description of the user.
+- `desc`: Description of the user.
 - `email`: The users email address.
 - `groups`: Make the user a member of these groups.
 - `name`: (required) Name of the user to create, remove or modify.
