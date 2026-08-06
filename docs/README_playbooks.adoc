@@ -5,13 +5,12 @@ playbooks that utilize the functionality of Men&Mice Micetro.
 
 Following are a couple of example playbooks for inspiration.
 
-These playbooks have been tested extensively with different operating
-systems, versions of Ansible and Python. For a complete overview, have
-a look at the "<<README_testmatrix.adoc#testmatrix,Testmatrix>>" chapter.
-
-Caveat: As the operating systems do not have all these combinations of
-Ansible and Python available, the tests where done in Python virtual
-environments.
+Correctness is verified by the automated test suites under `tests/unit`
+(mocked, run on every change) and `tests/functional` (exercises the real
+modules/lookups/inventory plugin against a live Micetro host via
+`ansible-playbook`/`ansible-inventory`; see `CLAUDE.md` for how to run
+it). Confirmed working against a live Micetro 26.1.1 instance on
+ansible-core 2.16.
 
 All these playbooks are available in the `examples` directory.
 
