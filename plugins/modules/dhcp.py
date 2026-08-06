@@ -185,7 +185,7 @@ def run_module():
 
         scopes = get_dhcp_scopes(mm_provider, ipaddress)
         if not scopes:
-            errormsg = "No DHCP scope for IP address %s", ipaddress
+            errormsg = "No DHCP scope for IP address %s" % ipaddress
             module.fail_json(msg=errormsg)
 
         if resp["ipamRecord"]["dhcpReservations"]:
