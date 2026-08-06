@@ -154,3 +154,67 @@ def test_text_property_on_ipaddress_dest_is_actually_created(
     # The module reports success and the property never actually exists.
     assert as_bool(output["create_changed"]) is True
     assert int(output["created_status"]) == 200
+
+
+@pytest.mark.parametrize(
+    "dest,resource_type",
+    [
+        ("dnsrecord", "dnsRecords"),
+        ("changerequest", "changeRequests"),
+    ],
+)
+def test_new_dest_types_from_issue_8(
+    run_playbook, mm_provider, dest, resource_type
+):
+    """Regression coverage for issue #8: DEST2URL originally didn't cover
+    these two. Unlike most of the *other* object types that also expose
+    a propertyDefinitions endpoint (roles, users, groups, folders, DHCP
+    scopes/groups/pools, AD sites/forests, ...), these two are
+    confirmed live to actually accept custom property creation - see
+    test_props.py's module docstring and props.py's DESTTYPES comment
+    for the full list of object types that were tried and rejected."""
+    prop_name = "claudefunc%s%s" % (dest, uuid.uuid4().hex[:6])
+    prop_def_url = (
+        "{{ mm_provider.mm_url }}/mmws/api/v2/%s/1/propertyDefinitions/%s"
+        % (resource_type, prop_name)
+    )
+
+    tasks = [
+        {
+            "name": "Create custom property definition on dest=%s" % dest,
+            "menandmice.ansible_micetro.props": {
+                "name": prop_name,
+                "state": "present",
+                "proptype": "yesno",
+                "dest": dest,
+                "mm_provider": "{{ mm_provider }}",
+            },
+            "register": "create_result",
+        },
+        uri_check("Verify created", prop_def_url, "verify_created"),
+        {
+            "name": "Delete custom property definition",
+            "menandmice.ansible_micetro.props": {
+                "name": prop_name,
+                "state": "absent",
+                "dest": dest,
+                "mm_provider": "{{ mm_provider }}",
+            },
+            "register": "delete_result",
+        },
+        collect_output(
+            {
+                "create_changed": "create_result.changed | bool",
+                "created_name": (
+                    "verify_created.json.result.propertyDefinition.name"
+                ),
+                "delete_changed": "delete_result.changed | bool",
+            }
+        ),
+    ]
+
+    output = run_playbook(tasks, mm_provider)
+
+    assert as_bool(output["create_changed"]) is True
+    assert output["created_name"] == prop_name
+    assert as_bool(output["delete_changed"]) is True

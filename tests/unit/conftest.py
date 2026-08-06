@@ -52,3 +52,7 @@ _load(
     "ansible_collections.menandmice.ansible_micetro.plugins.modules.group",
     "plugins/modules/group.py",
 )
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.modules.props",
+    "plugins/modules/props.py",
+)

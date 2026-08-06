@@ -55,9 +55,18 @@ DOCUMENTATION = r"""
     dest:
       description:
         - The section where to define the custom property.
+        - Only object types that actually support custom properties on
+          the Micetro server are valid here. Several more object types
+          expose a C(propertyDefinitions) sub-resource in the API (e.g.
+          roles, users, groups, folders, DHCP scopes/groups/pools,
+          AD sites/forests, ...), but confirmed live against a real
+          server, all of those reject custom property creation with
+          "not supported" - the API path existing doesn't mean the
+          object type accepts custom properties.
       choices: [
                 dnsserver, dhcpserver, zone, iprange, ipaddress,
-                device, interface, cloudnet, cloudaccount
+                device, interface, cloudnet, cloudaccount,
+                dnsrecord, changerequest
       ]
       required: True
       type: str
@@ -144,6 +153,16 @@ message:
 """
 
 PROPTYPES = ["text", "yesno", "ipaddress", "number"]
+
+# Every one of these has a real "/{type}/{ref}/propertyDefinitions"
+# sub-resource in the v2 API, confirmed against the live swagger spec.
+# But most other object types that *also* expose that sub-resource
+# (roles, users, groups, folders, DHCP scopes/groups/pools/exclusions/
+# reservations/superscopes, AD forests/sites/site-links, address
+# spaces, appliances, report definitions, ...) reject custom property
+# creation outright when tested live: "Adding custom property for
+# object type "X" is not supported." Only dnsRecords and changeRequests
+# joined the original 9 as types that actually accept them.
 DESTTYPES = [
     "dnsserver",
     "dhcpserver",
@@ -154,6 +173,8 @@ DESTTYPES = [
     "interface",
     "cloudnet",
     "cloudaccount",
+    "dnsrecord",
+    "changerequest",
 ]
 
 DEST2URL = {
@@ -166,6 +187,8 @@ DEST2URL = {
     "interface": "interfaces",
     "cloudnet": "cloudNetworks",
     "cloudaccount": "cloudServiceAccounts",
+    "dnsrecord": "dnsRecords",
+    "changerequest": "changeRequests",
 }
 
 TYPE2TYPE = {
