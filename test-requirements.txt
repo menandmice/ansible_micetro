@@ -1,6 +1,8 @@
 black
 flake8
 mock
+pytest
+pytest-mock
 pytest-xdist
 yamllint
 coverage
