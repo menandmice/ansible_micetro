@@ -20,6 +20,10 @@ include::README_dhcpscope_info.adoc[]
 
 include::README_dhcpsuperscope.adoc[]
 
+include::README_dhcpgroup.adoc[]
+
+include::README_dhcpaddresspool.adoc[]
+
 include::README_zone.adoc[]
 
 include::README_dnsrecord.adoc[]

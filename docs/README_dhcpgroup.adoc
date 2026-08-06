@@ -1,0 +1,28 @@
+=== menandmice.ansible_micetro.dhcpgroup
+
+Manage DHCP Group configuration on Men&Mice Micetro
+
+==== Options
+
+- `state`: The state of the DHCP group. (`absent`, `present`)
+- `name`: (required) Name of the DHCP group
+- `owner_ref`: (required) Reference of the DHCP server or DHCP scope
+  that owns this group
+- `parent_ref`: Reference of a parent DHCP group to nest this group
+  under. Only used when creating a new group; ignored for updates.
+- `save_comment`: Save comment left in Micetro for any changes
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Examples
+
+.DHCP group configuration example
+[source,yaml]
+----
+- name: Manage a DHCP group owned by a DHCP server
+  menandmice.ansible_micetro.dhcpgroup:
+    state: present
+    name: My DHCP Group
+    owner_ref: dhcpServers/1
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

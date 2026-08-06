@@ -60,3 +60,11 @@ _load(
     "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcpsuperscope",
     "plugins/modules/dhcpsuperscope.py",
 )
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcpgroup",
+    "plugins/modules/dhcpgroup.py",
+)
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcpaddresspool",
+    "plugins/modules/dhcpaddresspool.py",
+)
