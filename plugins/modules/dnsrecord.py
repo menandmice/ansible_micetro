@@ -264,7 +264,7 @@ def run_module():
         rrzone += "."
 
     # Try to get all name of DNS Zone info
-    refs = "DNSZones?filter=%s" % rrzone
+    refs = "dnsZones?filter=%s" % rrzone
     zoneresp = get_single_refs(refs, mm_provider)
     if zoneresp.get("totalResults", 1) == 0:
         # Zone does not exists
@@ -288,7 +288,7 @@ def run_module():
     # always available). All spaces are translated into '%20'
     # (hex code for space) and tabs are replaced with '\\t' to ensure
     # the tabs reach the API ad '\t'.
-    refs = "%s/DNSRecords?filter=name=%s and type=%s and data=%s" % (
+    refs = "%s/dnsRecords?filter=name=%s and type=%s and data=%s" % (
         zoneref,
         rrname,
         rrtype,
@@ -302,7 +302,7 @@ def run_module():
     # the recordtype
     if len(iparesp.get("dnsRecords", [])) == 0:
         rrname_short = rrname.split(".")[0]
-        refs = "%s/DNSRecords?filter=name=%s and type=%s and data=%s" % (
+        refs = "%s/dnsRecords?filter=name=%s and type=%s and data=%s" % (
             zoneref,
             rrname_short,
             rrtype,
@@ -355,7 +355,7 @@ def run_module():
     if add:
         # Absent, create
         http_method = "POST"
-        url = "DNSRecords"
+        url = "dnsRecords"
         databody = {
             "saveComment": "Ansible API",
             "dnsRecords": [

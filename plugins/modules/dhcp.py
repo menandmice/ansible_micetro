@@ -18,7 +18,6 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible.utils import unicode
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
@@ -175,7 +174,7 @@ def run_module():
 
     for ipaddress in module.params["ipaddress"]:
         # Get the existing reservation for requested IP address
-        refs = "IPAMRecords/%s" % ipaddress
+        refs = "ipamRecords/%s" % ipaddress
         resp = get_single_refs(refs, mm_provider)
         # If the 'invalid' key exists, the request failed.
         if resp.get("invalid", None):
@@ -202,30 +201,15 @@ def run_module():
                         "deleteUnspecified": module.params.get(
                             "deleteunspecified", False
                         ),
-                        "properties": [
-                            {"name": "name", "value": module.params["name"]},
-                            {
-                                "name": "clientIdentifier",
-                                "value": module.params["macaddress"],
-                            },
-                            {"name": "addresses", "value": ipaddress},
-                            {
-                                "name": "ddnsHostName",
-                                "value": module.params.get("ddnshost", ""),
-                            },
-                            {
-                                "name": "filename",
-                                "value": module.params.get("filename", ""),
-                            },
-                            {
-                                "name": "serverName",
-                                "value": module.params.get("servername", ""),
-                            },
-                            {
-                                "name": "nextServer",
-                                "value": module.params.get("nextserver", ""),
-                            },
-                        ],
+                        "properties": {
+                            "name": module.params["name"],
+                            "clientIdentifier": module.params["macaddress"],
+                            "addresses": ipaddress,
+                            "ddnsHostName": module.params.get("ddnshost", ""),
+                            "filename": module.params.get("filename", ""),
+                            "serverName": module.params.get("servername", ""),
+                            "nextServer": module.params.get("nextserver", ""),
+                        },
                     }
 
                     # Check if the requested data is equal to the current data
@@ -234,12 +218,8 @@ def run_module():
                     # not allowed, IP address needs to be a string. So that needs
                     # to be taken into consideration.
                     change = False
-                    for key in databody["properties"]:
-                        name = key["name"]
-                        val = key["value"]
-                        if name == "addresses" and isinstance(
-                            val, (str, unicode)
-                        ):
+                    for name, val in databody["properties"].items():
+                        if name == "addresses" and isinstance(val, str):
                             val = [val]
 
                         # Check if it is in the current values
@@ -263,13 +243,13 @@ def run_module():
             if module.params["state"] == "present":
                 # If IP address is a string, turn it into a list, as the API
                 # requires that
-                if isinstance(ipaddress, (str, unicode)):
+                if isinstance(ipaddress, str):
                     ipaddress = [ipaddress]
 
                 # No reservation found. Create one. Try this in each scope.
                 for scope in scopes:
                     http_method = "POST"
-                    url = "%s/DHCPReservations" % scope
+                    url = "%s/dhcpReservations" % scope
                     databody = {
                         "saveComment": "Ansible API",
                         "dhcpReservation": {

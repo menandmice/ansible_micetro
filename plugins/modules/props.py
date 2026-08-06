@@ -157,15 +157,15 @@ DESTTYPES = [
 ]
 
 DEST2URL = {
-    "dnsserver": "DNSServers",
-    "dhcpserver": "DHCPServers",
-    "zone": "DNSZones",
-    "iprange": "Ranges",
-    "ipaddress": "IPAMRecords",
-    "device": "Devices",
-    "interface": "Interfaces",
-    "cloudnet": "CloudNetworks",
-    "cloudaccount": "CloudServiceAccounts",
+    "dnsserver": "dnsServers",
+    "dhcpserver": "dhcpServers",
+    "zone": "dnsZones",
+    "iprange": "ranges",
+    "ipaddress": "ipamRecords",
+    "device": "devices",
+    "interface": "interfaces",
+    "cloudnet": "cloudNetworks",
+    "cloudaccount": "cloudServiceAccounts",
 }
 
 TYPE2TYPE = {
@@ -234,7 +234,7 @@ def run_module():
 
     # Check if the property is already present
     http_method = "GET"
-    url = "%s/1/PropertyDefinitions/%s" % (
+    url = "%s/1/propertyDefinitions/%s" % (
         DEST2URL[module.params.get("dest")],
         module.params.get("name"),
     )
@@ -247,7 +247,7 @@ def run_module():
         if not resp.get("warnings", None):
             # Property is present, deletion is required
             http_method = "DELETE"
-            url = "%s/1/PropertyDefinitions/%s" % (
+            url = "%s/1/propertyDefinitions/%s" % (
                 DEST2URL[module.params.get("dest")],
                 module.params.get("name"),
             )
@@ -284,7 +284,7 @@ def run_module():
     if resp.get("warnings", None):
         # Not there, yet. Create the property
         http_method = "POST"
-        url = "%s/1/PropertyDefinitions" % DEST2URL[module.params.get("dest")]
+        url = "%s/1/propertyDefinitions" % DEST2URL[module.params.get("dest")]
     else:
         # Property already exists, check if it needs an update
         curprop = resp["message"]["result"]
@@ -304,7 +304,7 @@ def run_module():
             module.exit_json(**result)
 
         http_method = "PUT"
-        url = "%s/1/PropertyDefinitions/%s" % (
+        url = "%s/1/propertyDefinitions/%s" % (
             DEST2URL[module.params.get("dest")],
             module.params.get("name"),
         )

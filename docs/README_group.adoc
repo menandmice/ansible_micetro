@@ -4,7 +4,7 @@ Manage groups on Men&Mice Micetro
 
 ==== Options
 
-- `descr`: Description of the group.
+- `desc`: Description of the group.
 - `name`: (required) Name of the group to create, remove or modify.
 - `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
 - `roles`: List of roles to add to this group.

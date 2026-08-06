@@ -11,6 +11,7 @@ Module to get information on DHCP scope definitions in Micetro
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = r"""
@@ -144,7 +145,7 @@ message:
 # All imports
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
-    get_single_refs
+    get_single_refs,
 )
 
 
@@ -180,20 +181,28 @@ def run_module():
             type="str",
             required=False,
             default="exact",
-            choices=["exact", "contains", "starts_with", "ends_with"]
+            choices=["exact", "contains", "starts_with", "ends_with"],
         ),
         sort_by=dict(
             type="str",
             required=False,
             default="name",
-            choices=["name", "ref", "rangeRef", "dhcpServerRef", "superscope", "description", "available"]
+            choices=[
+                "name",
+                "ref",
+                "rangeRef",
+                "dhcpServerRef",
+                "superscope",
+                "description",
+                "available",
+            ],
         ),
         sort_order=dict(
             type="str",
             required=False,
             default="Ascending",
-            choices=["Ascending", "Descending"]
-        )
+            choices=["Ascending", "Descending"],
+        ),
     )
 
     # Seed the result dict in the object
@@ -223,7 +232,7 @@ def run_module():
         "exact": "",
         "contains": "@",
         "starts_with": "^",
-        "ends_with": "$"
+        "ends_with": "$",
     }
 
     # Gather all module parameters
@@ -237,9 +246,11 @@ def run_module():
     sort_order = module.params["sort_order"]
 
     # Generate URL for API call
-    query = ["DHCPScopes?"]
+    query = ["dhcpScopes?"]
     if name:
-        query.append('filter=name=%s"%s"' % (search_method, name.replace(" ", "%20")))
+        query.append(
+            'filter=name=%s"%s"' % (search_method, name.replace(" ", "%20"))
+        )
 
     if limit:
         query.append("limit=%s" % (limit))
@@ -257,25 +268,27 @@ def run_module():
     if resp.get("invalid", None):
         module.fail_json(
             msg="An error occurred during the initial search, please try again",
-            response=resp
+            response=resp,
         )
 
     # Update the results based on the API call
-    result.update({
-        "dhcp_scopes": resp["dhcpScopes"],
-        "total_results": resp["totalResults"],
-        "message": "Returned %s DHCP scope(s)" % len(resp["dhcpScopes"])
-    })
+    result.update(
+        {
+            "dhcp_scopes": resp["dhcpScopes"],
+            "total_results": resp["totalResults"],
+            "message": "Returned %s DHCP scope(s)" % len(resp["dhcpScopes"]),
+        }
+    )
 
     # Gather the DHCP scope options
     if gather_options:
         for dhcp_scope in result["dhcp_scopes"]:
-            refs = "%s/Options" % dhcp_scope["ref"]
+            refs = "%s/options" % dhcp_scope["ref"]
             resp = get_single_refs(refs, mm_provider)
             if resp.get("invalid", None):
                 module.fail_json(
                     msg="An error occurred while getting the DHCP scope options, please try again",
-                    response=resp
+                    response=resp,
                 )
 
             option_list = resp.get("dhcpOptions", [])

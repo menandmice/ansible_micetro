@@ -47,7 +47,7 @@ DOCUMENTATION = r"""
       type: str
       required: True
       aliases: [ role ]
-    descr:
+    desc:
       description: Description of the role.
       required: False
       type: str
@@ -162,25 +162,25 @@ def run_module():
     # Get all API settings
     mm_provider = module.params["mm_provider"]
 
-    # Get all roles from the Men&Mice server, start with Roles url
+    # Get all roles from the Men&Mice server, start with roles url
     state = module.params["state"]
 
     # Get list of all roles in the system
-    resp = getrefs("Roles", mm_provider)
+    resp = getrefs("roles", mm_provider)
     if resp.get("warnings", None):
         module.fail_json(msg="Collecting roles: %s" % resp.get("warnings"))
     roles = resp["message"]["result"]["roles"]
 
     # If users are requested, get all users
     if module.params["users"]:
-        resp = getrefs("Users", mm_provider)
+        resp = getrefs("users", mm_provider)
         if resp.get("warnings", None):
             module.fail_json(msg="Collecting users: %s" % resp.get("warnings"))
         users = resp["message"]["result"]["users"]
 
     # If groups are requested, get all groups
     if module.params["groups"]:
-        resp = getrefs("Groups", mm_provider)
+        resp = getrefs("groups", mm_provider)
         if resp.get("warnings", None):
             module.fail_json(msg="Collecting groups: %s" % resp.get("warnings"))
         groups = resp["message"]["result"]["groups"]
@@ -236,7 +236,7 @@ def run_module():
                     wanted_users.append(
                         {
                             "ref": user["ref"],
-                            "objType": "Users",
+                            "objType": "User",
                             "name": user["name"],
                         }
                     )
@@ -250,23 +250,33 @@ def run_module():
                     wanted_groups.append(
                         {
                             "ref": group["ref"],
-                            "objType": "Groups",
+                            "objType": "Group",
                             "name": group["name"],
                         }
                     )
 
         if role_exists:
-            # Role already present, just update.
-            http_method = "PUT"
-            url = "Roles/%s" % role_ref
-            databody = {
-                "ref": role_ref,
-                "saveComment": "Ansible API",
-                "properties": [
-                    {"name": "name", "value": module.params["name"]},
-                    {"name": "description", "value": module.params["desc"]},
-                ],
-            }
+            # Role already present. Update name/description if changed.
+            # `role_ref` is already a full ref (e.g. "roles/6"), so it is
+            # used as-is for the object's own URL.
+            change = False
+            if role_data["name"] != module.params["name"]:
+                change = True
+            if role_data["description"] != module.params["desc"]:
+                change = True
+
+            result = {"changed": False, "message": ""}
+            if change:
+                url = role_ref
+                databody = {
+                    "ref": role_ref,
+                    "saveComment": "Ansible API",
+                    "properties": {
+                        "name": module.params["name"],
+                        "description": module.params["desc"],
+                    },
+                }
+                result = doapi(url, "PUT", mm_provider, databody)
 
             # Now figure out if users or groups need to be added or deleted
             # The ones in the playbook are in `wanted_(users|groups)`
@@ -275,7 +285,7 @@ def run_module():
 
             # Add or delete a role to or from a group
             # API call with PUT or DELETE
-            # http://mandm.example.net/mmws/api/Groups/6/Roles/31
+            # http://mandm.example.net/mmws/api/v2/groups/6/roles/31
             databody = {"saveComment": "Ansible API"}
             for thisgrp in wanted_groups + role_data["groups"]:
                 http_method = ""
@@ -293,12 +303,12 @@ def run_module():
                 # Execute wanted action
                 if http_method:
                     url = "%s/%s" % (thisgrp["ref"], role_ref)
-                    result = doapi(url, http_method, mm_provider, databody)
+                    doapi(url, http_method, mm_provider, databody)
                     result["changed"] = True
 
             # Add or delete a role to or from a user
             # API call with PUT or DELETE
-            # http://mandm.example.net/mmws/api/Users/31/Roles/2
+            # http://mandm.example.net/mmws/api/v2/users/31/roles/2
             for thisuser in wanted_users + role_data["users"]:
                 http_method = ""
                 if (thisuser in wanted_users) and (
@@ -315,23 +325,12 @@ def run_module():
                 # Execute wanted action
                 if http_method:
                     url = "%s/%s" % (thisuser["ref"], role_ref)
-                    result = doapi(url, http_method, mm_provider, databody)
+                    doapi(url, http_method, mm_provider, databody)
                     result["changed"] = True
-
-            # Check idempotency
-            change = False
-            if role_data["name"] != module.params["name"]:
-                change = True
-            if role_data["description"] != module.params["desc"]:
-                change = True
-
-            if change:
-                result = doapi(url, http_method, mm_provider, databody)
-            result["changed"] = change
         else:
             # Role not present, create
             http_method = "POST"
-            url = "Roles"
+            url = "roles"
             databody = {
                 "saveComment": "Ansible API",
                 "role": {
@@ -350,9 +349,10 @@ def run_module():
     # If requested state is "absent"
     if state == "absent":
         if role_exists:
-            # Role present, delete
+            # Role present, delete. `role_ref` is already a full ref
+            # (e.g. "roles/6").
             http_method = "DELETE"
-            url = "Roles/%s" % role_ref
+            url = role_ref
             databody = {"saveComment": "Ansible API"}
             result = doapi(url, http_method, mm_provider, databody)
         else:
