@@ -53,6 +53,12 @@
       when: ansible_facts['python_version'] is version('3', '>=')
       become: true
 
+    # Known issue: proptype: text on dest: ipaddress currently fails
+    # silently (props.py sends cloudTags/listItems unconditionally for
+    # proptype=text, which the ipamRecords propertyDefinitions backend
+    # rejects, and props.py doesn't check for that failure) - see the
+    # functional test suite (tests/functional/test_props.py) for
+    # details and status. Confirmed against a live 26.1.1 instance.
     - name: define custom properties for IP addresses
       menandmice.ansible_micetro.props:
         name: location
