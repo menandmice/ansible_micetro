@@ -59,7 +59,7 @@
     # rejects, and props.py doesn't check for that failure) - see the
     # functional test suite (tests/functional/test_props.py) for
     # details and status. Confirmed against a live 26.1.1 instance.
-    - name: define custom properties for IP addresses
+    - name: Define custom properties for IP addresses
       menandmice.ansible_micetro.props:
         name: location
         state: present
@@ -94,7 +94,7 @@
     # is to assign all collected free IP addresses to an Ansible fact,
     # but here you need to make sure the factname is not used over
     # multiple hosts.
-    - name: get free IP addresses and set it as a fact
+    - name: Get free IP addresses and set it as a fact
       ansible.builtin.set_fact:
         freeips: "{{ query('menandmice.ansible_micetro.freeip', mm_provider, network, claim=60, excludedhcp=True) }}"
 
@@ -149,7 +149,7 @@
 
     - name: Set a PTR DNS record for the claimed IP
       menandmice.ansible_micetro.dnsrecord:
-        dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:]  | join('.') }}"
+        dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}"
         name: "{{ freeips[0] | ansible.utils.ipaddr('revdns') }}"
         data: "testhost.testzone."
         rrtype: PTR
@@ -224,7 +224,7 @@
     - name: Remove the PTR DNS record for the claimed IP
       menandmice.ansible_micetro.dnsrecord:
         state: absent
-        dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:]  | join('.') }}"
+        dnszone: "{{ (freeips[0] | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}"
         name: "{{ freeips[0] | ansible.utils.ipaddr('revdns') }}"
         data: "testhost.testzone."
         rrtype: PTR

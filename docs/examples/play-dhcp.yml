@@ -32,7 +32,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: check idempotentie
+    - name: Check idempotentie
       menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
@@ -44,7 +44,7 @@
     # Changing the MAC address of a reservation is not allowed, as this
     # would alter the reservation. To achieve this, release the reservation
     # and reclaim it.
-    - name: change mac
+    - name: Change mac
       menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
@@ -53,7 +53,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: change ip
+    - name: Change ip
       menandmice.ansible_micetro.dhcp:
         state: present
         name: myreservation
@@ -62,7 +62,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: change name
+    - name: Change name
       menandmice.ansible_micetro.dhcp:
         state: present
         name: movemyreservation
@@ -71,7 +71,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: delete reservation (wrong one)
+    - name: Delete reservation (wrong one)
       menandmice.ansible_micetro.dhcp:
         state: absent
         name: movemyreservation
@@ -80,7 +80,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: delete reservation (correct one)
+    - name: Delete reservation (correct one)
       menandmice.ansible_micetro.dhcp:
         state: absent
         name: myreservation
@@ -89,7 +89,7 @@
         mm_provider: "{{ mm_provider }}"
       delegate_to: localhost
 
-    - name: create reservation in invalid range
+    - name: Create reservation in invalid range
       menandmice.ansible_micetro.dhcp:
         state: present
         name: reservationnonet
