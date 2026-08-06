@@ -23,9 +23,9 @@ Manage DHCP Scope configuration on Men&Mice Micetro
   menandmice.ansible_micetro.dhcpscope:
     state: present
     name: My DHCP Scope
-    range_ref: Ranges/1
+    range_ref: ranges/1
     dhcp_server_refs:
-      - DHCPServers/1
+      - dhcpServers/1
     options:
       3:
         - 1.1.1.1

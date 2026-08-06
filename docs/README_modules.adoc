@@ -18,7 +18,7 @@ include::README_dhcpscope.adoc[]
 
 include::README_dhcpscope_info.adoc[]
 
-include::README_dhcpaddresspool.adoc[]
+include::README_dhcpsuperscope.adoc[]
 
 include::README_zone.adoc[]
 

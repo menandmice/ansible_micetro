@@ -1,5 +1,24 @@
 # Changelog
 
+- spenney - 2026-08-06 - Version 1.0.15
+  * Migrated the collection to the Micetro v2 REST API: versioned camelCase
+    endpoints and Bearer session-token auth in `module_utils.micetro`,
+    replacing the unversioned PascalCase/Basic-Auth API and the
+    `ansible.errors` import that broke on ansible-core 2.21+
+  * Fixed several bugs found while migrating: `dhcp.py` couldn't import at
+    all (dead `ansible.utils.unicode` reference), `group.py`'s
+    `state: absent`/`present` logic always missed existing groups,
+    `zone.py` referenced a nonexistent response key, and more (see
+    GitLab issues #2-#6)
+  * Added a unit test suite (`tests/unit`) and a functional test suite
+    (`tests/functional`) that runs the real modules/lookups/inventory
+    plugin against a live Micetro host
+  * Expanded `props.py`'s supported `dest` types to `dnsrecord` and
+    `changerequest`, the two additional object types confirmed to
+    actually support custom properties
+  * Added the `dhcpsuperscope` module to manage DHCP superscopes as
+    first-class objects
+
 - abrauns-silex - 2025-05-14 - Version 1.0.14
   * Fixed a minor bug when a dhcpscope contains a space in `dhcpscope` and `dhcpscope_info`
 
