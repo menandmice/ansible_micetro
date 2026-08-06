@@ -53,33 +53,54 @@ class MicetroAPIError(Exception):
 
 
 def _login(mm_provider):
-    """Create a new API session and return its token."""
+    """Create a new API session and return its token.
+
+    Some servers enforce a low per-user concurrent-connection cap, which
+    surfaces here (never later, since login is always the first call) as
+    an HTTP 400 with error code 1030 ("Too many open connections").
+    That's transient - it clears within a few seconds - so retry a few
+    times before giving up, the same way doapi() retries ConnectionError.
+    """
     apiurl = "%s/%s/micetro/sessions" % (mm_provider["mm_url"], API_BASE)
-    try:
-        resp = open_url(
-            apiurl,
-            method="POST",
-            data=json.dumps(
-                {
-                    "loginName": mm_provider["mm_user"],
-                    "password": mm_provider["mm_password"],
-                },
-                ensure_ascii=False,
-            ).encode("utf8"),
-            validate_certs=False,
-            headers={"Content-Type": "application/json"},
-        )
-        body = json.loads(resp.read().decode("utf8"))
-    except HTTPError as err:
-        raise MicetroAPIError(
-            "Failed to authenticate to %s: %s"
-            % (mm_provider["mm_url"], to_native(err))
-        )
-    except (URLError, SSLValidationError) as err:
-        raise MicetroAPIError(
-            "Failed to reach %s: %s" % (mm_provider["mm_url"], to_native(err))
-        )
-    return body["result"]["session"]
+    # Matches the budget the test harness previously used for this same
+    # error at the playbook level (8 retries * 15s) before that approach
+    # was found to be unsafe for non-idempotent playbooks; doing it here
+    # instead is safe regardless of playbook idempotency, since nothing
+    # has been attempted yet at the point login fails.
+    maxtries = 8
+    retry_delay_seconds = 15
+
+    for tries in range(1, maxtries + 1):
+        try:
+            resp = open_url(
+                apiurl,
+                method="POST",
+                data=json.dumps(
+                    {
+                        "loginName": mm_provider["mm_user"],
+                        "password": mm_provider["mm_password"],
+                    },
+                    ensure_ascii=False,
+                ).encode("utf8"),
+                validate_certs=False,
+                headers={"Content-Type": "application/json"},
+            )
+            body = json.loads(resp.read().decode("utf8"))
+        except HTTPError as err:
+            errbody = err.read().decode()
+            if "Too many open connections" in errbody and tries < maxtries:
+                time.sleep(retry_delay_seconds)
+                continue
+            raise MicetroAPIError(
+                "Failed to authenticate to %s: %s"
+                % (mm_provider["mm_url"], to_native(err))
+            )
+        except (URLError, SSLValidationError) as err:
+            raise MicetroAPIError(
+                "Failed to reach %s: %s"
+                % (mm_provider["mm_url"], to_native(err))
+            )
+        return body["result"]["session"]
 
 
 def _session_token(mm_provider, force=False):

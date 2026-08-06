@@ -175,10 +175,7 @@ class TestPresent:
             {
                 "ref": "dhcpSuperscopes/6",
                 "saveComment": "Ansible API",
-                "properties": {
-                    "name": "local",
-                    "description": "new description",
-                },
+                "properties": {"description": "new description"},
             },
         )
         assert result["changed"] is True
