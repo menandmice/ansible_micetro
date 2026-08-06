@@ -31,7 +31,7 @@ With output like (output shortened):
 ----
 ok: [localhost] => {
     "ipinfo": {
-        "addrRef": "IPAMRecords/11",
+        "addrRef": "ipamRecords/11",
         "address": "172.16.17.2",
         "claimed": false,
         "customProperties": {

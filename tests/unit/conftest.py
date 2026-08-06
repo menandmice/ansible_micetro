@@ -56,3 +56,7 @@ _load(
     "ansible_collections.menandmice.ansible_micetro.plugins.modules.props",
     "plugins/modules/props.py",
 )
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcpsuperscope",
+    "plugins/modules/dhcpsuperscope.py",
+)
