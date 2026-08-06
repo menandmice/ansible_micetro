@@ -15,6 +15,10 @@ def set_module_args(args):
     """Prepare arguments so they will be picked up by AnsibleModule."""
     args = json.dumps({"ANSIBLE_MODULE_ARGS": args})
     basic._ANSIBLE_ARGS = to_bytes(args)
+    # ansible-core 2.19+ requires a serialization profile alongside the
+    # args envelope (see ansible.module_utils.testing.patch_module_args);
+    # "legacy" matches what real module invocations use.
+    basic._ANSIBLE_PROFILE = "legacy"
 
 
 class AnsibleExitJson(Exception):

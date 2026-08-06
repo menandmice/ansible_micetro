@@ -18,6 +18,8 @@ import os
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -99,6 +101,102 @@ def mm_provider():
     return provider
 
 
+def _direct_api_call(provider, path, method="GET", data=None):
+    """A direct (non-ansible-playbook) API call for fixture setup that
+    doesn't need a full playbook run just to look something up. Shares
+    the same connection-limit retry behavior as run_playbook/run_inventory.
+    """
+    session_url = "%s/mmws/api/v2/micetro/sessions" % provider["mm_url"]
+    login_body = json.dumps(
+        {"loginName": provider["mm_user"], "password": provider["mm_password"]}
+    ).encode()
+
+    token = None
+    for attempt in range(1, _CONNECTION_LIMIT_RETRIES + 1):
+        try:
+            req = urllib.request.Request(
+                session_url,
+                data=login_body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                token = json.loads(resp.read())["result"]["session"]
+            break
+        except urllib.error.URLError:
+            if attempt == _CONNECTION_LIMIT_RETRIES:
+                raise
+            time.sleep(_CONNECTION_LIMIT_BACKOFF_SECONDS)
+
+    url = "%s/mmws/api/v2/%s" % (provider["mm_url"], path)
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(data).encode() if data is not None else None,
+        headers={
+            "Authorization": "Bearer %s" % token,
+            "Content-Type": "application/json",
+        },
+        method=method,
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        body = resp.read()
+        return json.loads(body) if body else {}
+
+
+@pytest.fixture(scope="session")
+def dhcp_server(mm_provider):
+    """The first configured DHCP server's ref + name, or skip if this
+    host has none (that's a real, valid state - not every test host
+    has a DHCP server backing it).
+    """
+    result = _direct_api_call(mm_provider, "dhcpServers")["result"]
+    if result["totalResults"] == 0:
+        pytest.skip("No DHCP server configured on this host")
+    server = result["dhcpServers"][0]
+    return {"ref": server["ref"], "name": server["name"]}
+
+
+@pytest.fixture(scope="session")
+def dns_server(mm_provider):
+    """The first configured DNS server's ref + name, or skip if this
+    host has none.
+    """
+    result = _direct_api_call(mm_provider, "dnsServers")["result"]
+    if result["totalResults"] == 0:
+        pytest.skip("No DNS server configured on this host")
+    server = result["dnsServers"][0]
+    return {"ref": server["ref"], "name": server["name"]}
+
+
+@pytest.fixture(scope="session")
+def subnet_range(mm_provider):
+    """A real, usable leaf subnet range (full object) to attach DHCP
+    scopes to.
+
+    Avoids ranges with child ranges (a "subnet: true" container range
+    like a /10 with /24s underneath it isn't a usable individual subnet
+    for DHCP scope creation - confirmed live, it fails with "Creation
+    of DHCP scope did not produce a DHCP scope") and ranges that
+    already have a DHCP scope on them (e.g. one the DHCP server
+    auto-registered on setup). Skips if none is available.
+    """
+    result = _direct_api_call(mm_provider, "ranges")["result"]
+    for candidate in result["ranges"]:
+        if (
+            candidate.get("subnet")
+            and not candidate.get("childRanges")
+            and not candidate.get("dhcpScopes")
+        ):
+            return candidate
+    pytest.skip("No free leaf subnet range available on this host")
+
+
+@pytest.fixture(scope="session")
+def subnet_range_ref(subnet_range):
+    """Just the ref of `subnet_range`, for tests that only need that."""
+    return subnet_range["ref"]
+
+
 @pytest.fixture(scope="session")
 def collections_root(tmp_path_factory):
     """A throwaway collections tree with this repo registered as
@@ -115,31 +213,39 @@ def collections_root(tmp_path_factory):
 
 
 def _run_with_connection_limit_retry(cmd, cwd, env):
-    proc = None
-    for attempt in range(1, _CONNECTION_LIMIT_RETRIES + 1):
-        proc = subprocess.run(
-            cmd,
-            cwd=str(cwd),
-            env=env,
-            capture_output=True,
-            text=True,
-            # Generous: a playbook with several retry-wrapped tasks can
-            # legitimately spend retries * delay seconds per task inside
-            # a single ansible-playbook invocation if the connection
-            # limit is hit more than once.
-            timeout=600,
-        )
-        # Checked regardless of return code: a task using
-        # ignore_errors: True to assert on an expected fail_json()
-        # message makes the overall play "succeed" (rc=0) even when a
-        # task actually hit the connection-limit crash instead.
-        hit_connection_limit = any(
-            marker in proc.stdout for marker in _CONNECTION_LIMIT_MARKERS
-        )
-        if not hit_connection_limit or attempt == _CONNECTION_LIMIT_RETRIES:
-            break
-        time.sleep(_CONNECTION_LIMIT_BACKOFF_SECONDS)
-    return proc
+    """Run the playbook/inventory command exactly once.
+
+    Despite the name (kept so callers didn't need to change), this no
+    longer retries the whole command. It used to: retry the entire
+    ansible-playbook invocation whenever connection-limit marker text
+    appeared in stdout. That's unsafe for *any* playbook containing a
+    non-idempotent step (e.g. a raw `ansible.builtin.uri` POST that
+    doesn't check for existence first, unlike this collection's own
+    modules) - confirmed live, twice: once when a fully-successful run
+    got needlessly re-run and left an orphaned dhcpsuperscope behind
+    (marker text from a *recovered* per-task retry still showed up in
+    stdout even though the play succeeded), and again when a genuinely
+    failed run got retried from scratch and its own earlier, already-
+    applied create step collided with itself on the second pass
+    ("custom property name ... is already in use").
+
+    Every registered task is wrapped in its own retries/until loop (see
+    _with_connection_limit_retry(task) below) - that handles transient
+    connection-limit hits without ever needing to restart the whole
+    playbook, and does so per-task instead of per-run, which is the
+    only way to retry safely when not every task is idempotent.
+    """
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        env=env,
+        capture_output=True,
+        text=True,
+        # Generous: a playbook with several retry-wrapped tasks can
+        # legitimately spend retries * delay seconds per task if the
+        # connection limit is hit more than once across the run.
+        timeout=600,
+    )
 
 
 def _with_connection_limit_retry(task):

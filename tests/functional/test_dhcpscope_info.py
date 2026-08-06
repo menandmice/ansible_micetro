@@ -1,19 +1,26 @@
 """Functional coverage for the `dhcpscope_info` module.
 
-The test host has no DHCP server/scopes configured, so this covers the
-read-only, empty-result path (which is itself the exact path
-end-to-end-verified during the #7 v2 migration) plus basic parameter
-validation - not a real scope's data, since none can exist here.
+Whether this host has any DHCP scopes at all varies (a real DHCP server
+may or may not be configured, and may already have scopes of its own),
+so the "empty result" case is tested by filtering on a name that can't
+possibly match anything, rather than assuming zero scopes exist
+globally - that's the only assumption that holds regardless of
+environment.
 """
+
+import uuid
 
 from .helpers import as_bool, collect_output
 
 
-def test_returns_empty_result_when_no_scopes_exist(run_playbook, mm_provider):
+def test_returns_empty_result_for_a_name_that_does_not_exist(
+    run_playbook, mm_provider
+):
     tasks = [
         {
-            "name": "Gather DHCP scope info",
+            "name": "Gather DHCP scope info for a name that can't exist",
             "menandmice.ansible_micetro.dhcpscope_info": {
+                "name": "claude-func-test-nonexistent-%s" % uuid.uuid4().hex,
                 "limit": 5,
                 "mm_provider": "{{ mm_provider }}",
             },

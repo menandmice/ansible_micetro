@@ -246,24 +246,17 @@ def run_module():
                     }
                 )
         else:
-            # Superscope exists; update name/description if changed
+            # Superscope exists, found by matching name (the API
+            # rejects "name" as read-only on update anyway, confirmed
+            # live), so only description can actually be updated here.
             superscope = resp["superscopes"][0]
-            change = False
-            if superscope["name"] != name:
-                change = True
             if superscope["description"] != description:
-                change = True
-
-            if change:
                 url = superscope["ref"]
                 http_method = "PUT"
                 databody = {
                     "ref": superscope["ref"],
                     "saveComment": save_comment,
-                    "properties": {
-                        "name": name,
-                        "description": description,
-                    },
+                    "properties": {"description": description},
                 }
                 api_result = doapi(url, http_method, mm_provider, databody)
                 if api_result.get("warnings", None):

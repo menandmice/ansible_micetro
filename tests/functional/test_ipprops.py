@@ -44,6 +44,11 @@ def _define_property_task(name, prop_type):
                 },
             },
         },
+        # Registered (even though nothing here inspects the result) so
+        # this raw, non-idempotent call gets the same per-task
+        # connection-limit retry every collection-module task gets -
+        # see _with_connection_limit_retry in conftest.py.
+        "register": "_define_property_result",
     }
 
 
@@ -61,6 +66,7 @@ def _delete_property_task(name):
             "force_basic_auth": True,
             "status_code": [204],
         },
+        "register": "_delete_property_result",
     }
 
 
