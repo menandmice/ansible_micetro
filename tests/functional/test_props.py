@@ -4,12 +4,13 @@ Uses dest=ipaddress (-> ipamRecords propertyDefinitions) since the test
 host has real tracked IP ranges but no DNS/DHCP servers to hang a
 `dest=zone`/`dest=dnsserver` property off of.
 
-Uses proptype=yesno (Boolean) rather than text: text-type properties
-make props.py send cloudTags/listItems fields, which the ipamRecords
-propertyDefinitions backend on this server rejects with a WSDL-layer
-error. props.py doesn't check for warnings on that call either, so it
-silently reports changed=false/ok instead of failing - see the
-functional-testing follow-up filed for this.
+Uses proptype=yesno (Boolean) rather than text for most cases: the
+ipamRecords propertyDefinitions backend on this server rejects
+cloudTags/listItems (which props.py used to send unconditionally for
+proptype=text) with a WSDL-layer error - props.py now skips those
+fields for dest=ipaddress specifically (issue #14). See
+test_text_property_on_ipaddress_dest_is_actually_created below for
+that path.
 """
 
 import uuid
@@ -100,20 +101,6 @@ def test_props_create_update_delete(run_playbook, mm_provider):
     assert int(output["gone_status"]) in (400, 404)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "props.py unconditionally adds cloudTags/listItems to the "
-        "request body whenever proptype=text, regardless of dest. This "
-        "server's ipamRecords propertyDefinitions backend rejects "
-        "cloudTags with a WSDL-layer 400 for dest=ipaddress. Worse, "
-        "props.py never checks doapi()'s `warnings` key on that create "
-        "call, so it reports changed=false/ok instead of failing - the "
-        "module silently no-ops instead of erroring. Filed as a "
-        "follow-up; this test documents the bug so it flips to a pass "
-        "once fixed."
-    ),
-    strict=True,
-)
 def test_text_property_on_ipaddress_dest_is_actually_created(
     run_playbook, mm_provider
 ):
