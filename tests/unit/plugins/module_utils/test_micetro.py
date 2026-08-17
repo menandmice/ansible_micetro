@@ -341,3 +341,128 @@ class TestGetrefsAndFriends:
             "ranges?filter=172.16.17.2", "GET", MM_PROVIDER, {}
         )
         assert scopes == ["dhcpScopes/1"]
+
+
+ZONE = {"ref": "dnsZones/1", "name": "example.net.", "type": "Primary"}
+
+
+class TestResolveDnsZoneRef:
+    """Regression coverage for issue #18, factored out of dnsrecord.py so
+    dnsrecords.py's bulk-create module can share the same view/zone
+    lookup instead of duplicating it.
+    """
+
+    def test_bare_zone_name_resolves_ref(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"totalResults": 1, "dnsZones": [ZONE]},
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        get_single_refs.assert_called_once_with(
+            "dnsZones?filter=example.net.", MM_PROVIDER
+        )
+        assert result == {
+            "ref": "dnsZones/1",
+            "name": "example.net.",
+            "display": "example.net.",
+        }
+
+    def test_appends_missing_trailing_dot(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"totalResults": 1, "dnsZones": [ZONE]},
+        )
+
+        micetro.resolve_dns_zone_ref("example.net", MM_PROVIDER)
+
+        get_single_refs.assert_called_once_with(
+            "dnsZones?filter=example.net.", MM_PROVIDER
+        )
+
+    def test_view_disambiguated_name_filters_by_dnsviewref(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            side_effect=[
+                {
+                    "totalResults": 1,
+                    "dnsViews": [{"ref": "dnsViews/3", "name": "internal"}],
+                },
+                {"totalResults": 1, "dnsZones": [ZONE]},
+            ],
+        )
+
+        result = micetro.resolve_dns_zone_ref(
+            "example.net. (internal)", MM_PROVIDER
+        )
+
+        assert get_single_refs.call_args_list[0][0][0] == (
+            "dnsViews?filter=internal"
+        )
+        assert get_single_refs.call_args_list[1][0][0] == (
+            "dnsZones?filter=example.net.&dnsViewRef=dnsViews/3"
+        )
+        assert result["ref"] == "dnsZones/1"
+        assert result["display"] == "example.net. (internal)"
+
+    def test_unknown_view_is_invalid_without_looking_up_zone(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro, "get_single_refs", return_value={"totalResults": 0}
+        )
+
+        result = micetro.resolve_dns_zone_ref(
+            "example.net. (nosuchview)", MM_PROVIDER
+        )
+
+        assert result["invalid"] is True
+        assert "nosuchview" in result["warnings"]
+        get_single_refs.assert_called_once()
+
+    def test_ambiguous_zone_match_is_invalid_not_a_keyerror(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"invalid": True, "warnings": "ambiguous match"},
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True
+        assert "ambiguous match" in result["warnings"]
+
+    def test_zone_not_found_is_invalid(self, mocker):
+        mocker.patch.object(
+            micetro, "get_single_refs", return_value={"totalResults": 0}
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True
+        assert "does not exist" in result["warnings"]
+
+    def test_multiple_zones_with_no_matching_candidate_is_invalid(self, mocker):
+        """None of the returned zones satisfy the name/Primary-or-Master/
+        no-dnsScopeName match criteria - zoneref stays unset, and that
+        must be reported as invalid rather than returned as None (which
+        would otherwise get baked into a "None/dnsRecords?..." URL
+        downstream).
+        """
+        mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={
+                "totalResults": 2,
+                "dnsZones": [
+                    dict(ZONE, name="other.net."),
+                    dict(ZONE, type="Slave"),
+                ],
+            },
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True
