@@ -10,6 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import hashlib
+import os
 import time
 from ansible.module_utils._text import to_native
 from ansible.module_utils.connection import ConnectionError
@@ -20,6 +22,11 @@ try:
     from ansible.utils_utils.common import json
 except ImportError:
     import json
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - fcntl is POSIX-only
+    fcntl = None
 
 # The API sometimes has another concept of true and false than Python
 # does, so 0 is true and 1 is false.
@@ -36,6 +43,84 @@ API_BASE = "mmws/api/v2"
 # Cache of active session tokens, keyed by (mm_url, mm_user), so a single
 # module/lookup run doesn't log in again for every API call it makes.
 _SESSIONS = {}
+
+# How long a session token cached on disk (see _session_cache_*() below)
+# is trusted before a fresh login is forced, regardless of whether the
+# server has actually invalidated it yet. The API doesn't advertise a
+# session lifetime, so this just bounds how long a Bearer token sits in
+# a file; doapi()'s existing 401-triggered relogin already covers the
+# case where the server expires it sooner.
+_SESSION_CACHE_TTL_SECONDS = 900
+
+
+def _session_cache_dir():
+    """Directory sequential module tasks share a cached session through.
+
+    Every Ansible *module* task (as opposed to a lookup/inventory plugin
+    call) runs as a brand-new AnsiballZ subprocess with an empty
+    `_SESSIONS`, and the v2 API has no logout endpoint - see issue #16.
+    Persisting the token here lets consecutive tasks in one playbook run
+    reuse a single session instead of opening a new one each time,
+    matching where Ansible itself keeps other per-run scratch state.
+    """
+    path = os.path.expanduser(
+        os.path.join("~", ".ansible", "tmp", "mm_sessions")
+    )
+    os.makedirs(path, mode=0o700, exist_ok=True)
+    return path
+
+
+def _session_cache_path(mm_provider):
+    key = "%s|%s" % (mm_provider["mm_url"], mm_provider["mm_user"])
+    digest = hashlib.sha256(key.encode("utf8")).hexdigest()
+    return os.path.join(_session_cache_dir(), "%s.json" % digest)
+
+
+def _read_cached_session(mm_provider):
+    """Return a still-fresh disk-cached token, or None.
+
+    Best-effort: any problem reading/parsing/locking the cache file
+    (missing, corrupt, unwritable home dir, no fcntl on this platform)
+    just means falling back to a fresh login, not a hard failure.
+    """
+    if fcntl is None:
+        return None
+    try:
+        with open(_session_cache_path(mm_provider)) as cachefile:
+            fcntl.flock(cachefile, fcntl.LOCK_SH)
+            try:
+                data = json.load(cachefile)
+            finally:
+                fcntl.flock(cachefile, fcntl.LOCK_UN)
+    except (IOError, OSError, ValueError):
+        return None
+
+    if data.get("expires_at", 0) <= time.time():
+        return None
+    return data.get("token")
+
+
+def _write_cached_session(mm_provider, token):
+    """Persist a freshly-obtained token for other module tasks to reuse."""
+    if fcntl is None:
+        return
+    try:
+        path = _session_cache_path(mm_provider)
+        data = {
+            "token": token,
+            "expires_at": time.time() + _SESSION_CACHE_TTL_SECONDS,
+        }
+        fdesc = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fdesc, "w") as cachefile:
+            fcntl.flock(cachefile, fcntl.LOCK_EX)
+            try:
+                json.dump(data, cachefile)
+            finally:
+                fcntl.flock(cachefile, fcntl.LOCK_UN)
+    except (IOError, OSError):
+        # Caching is a best-effort optimization; a module task still
+        # works correctly (just logs in again) if this fails.
+        pass
 
 
 class MicetroAPIError(Exception):
@@ -104,11 +189,27 @@ def _login(mm_provider):
 
 
 def _session_token(mm_provider, force=False):
-    """Return a cached session token, logging in first if needed."""
+    """Return a cached session token, logging in first if needed.
+
+    Checks the in-process cache first (cheap; covers a single lookup/
+    inventory plugin run making many calls), then the on-disk cache
+    (covers separate module-task subprocesses within the same playbook
+    run - see _session_cache_dir()), before finally logging in fresh.
+    """
     key = (mm_provider["mm_url"], mm_provider["mm_user"])
-    if force or key not in _SESSIONS:
-        _SESSIONS[key] = _login(mm_provider)
-    return _SESSIONS[key]
+    if not force and key in _SESSIONS:
+        return _SESSIONS[key]
+
+    if not force:
+        cached = _read_cached_session(mm_provider)
+        if cached:
+            _SESSIONS[key] = cached
+            return cached
+
+    token = _login(mm_provider)
+    _SESSIONS[key] = token
+    _write_cached_session(mm_provider, token)
+    return token
 
 
 def doapi(url, method, mm_provider, databody):
