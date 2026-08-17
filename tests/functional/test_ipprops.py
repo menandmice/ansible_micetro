@@ -1,17 +1,13 @@
 """Functional coverage for the `ipprops` module against a live Micetro host.
 
 ipprops sets custom properties on an IP address, but (per its own docs)
-those properties must already be defined. The text-typed fixture
-property here is created/torn down via a raw API call rather than
-`props.py`, since `props.py` has its own, separately-documented bug that
-blocks creating text-typed properties on dest=ipaddress (see
-test_props.py) - this file is about ipprops.py's behavior, not that one.
+those properties must already be defined. The fixture properties here
+are created/torn down via a raw API call rather than `props.py`, so
+this file is purely about ipprops.py's behavior.
 """
 
 import random
 import uuid
-
-import pytest
 
 from .helpers import as_bool, uri_check, collect_output
 
@@ -118,21 +114,6 @@ def test_set_text_property_on_ip_is_idempotent(run_playbook, mm_provider):
     assert as_bool(output["noop_changed"]) is False
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Micetro's v2 API stringifies every custom property value on "
-        "read regardless of its declared type (confirmed for Boolean "
-        "and Integer), but accepts native JSON types on write. "
-        "ipprops.py's change-detection compares the requested native "
-        "value against that stringified read-back with no "
-        "normalization (its str2bool handling only covers lowercase "
-        "'true'/'false', not the API's actual '1'/'0'), so it reports "
-        "changed=true on every run for any non-string-typed property "
-        "even when nothing changed. Filed as a follow-up; this test "
-        "documents the bug so it flips to a pass once fixed."
-    ),
-    strict=True,
-)
 def test_set_boolean_property_on_ip_is_idempotent(run_playbook, mm_provider):
     address = _free_test_address()
     prop_name = "claudefuncipbool%s" % uuid.uuid4().hex[:6]
