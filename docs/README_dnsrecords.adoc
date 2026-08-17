@@ -1,0 +1,54 @@
+=== menandmice.ansible_micetro.dnsrecords
+
+Create multiple DNS records in one zone in a single API call
+
+==== Options
+
+- `dnszone`: (required) The DNS zone all records in this call are
+  created in. If a BIND server has several views with the same zone name
+  in each, disambiguate with the Management Console's own display
+  format, `zonename (viewname)`, e.g. `example.com (internal)`.
+- `records`: (required) The DNS records to create.
+  * `name`: (required) The name of the DNS record. Can either be
+    partially or fully qualified.
+  * `data`: (required) The data that is added to the DNS record. The
+    record data is a space-separated list when the resource type is one
+    of: `MX`, `SRV`, `NAPTR`, `CAA`, `CERT`, `HINFO` or `TLSA`. For MX and
+    SRV the hostname should be the short name and not the FQDN.
+  * `rrtype`: Resource Record Type for this DNS record. Default `A`.
+  * `ttl`: The Time-To-Live of the DNS record.
+  * `comment`: Comment string for the record.
+  * `enabled`: True if the record is enabled. Default `true`.
+  * `aging`: The aging timestamp of dynamic records in AD integrated
+    zones. Default `0`.
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+Only creation is supported - the API has no bulk-delete endpoint, so
+removing many records offers no advantage over
+`menandmice.ansible_micetro.dnsrecord` in a loop. Records that already
+exist (matched the same way `menandmice.ansible_micetro.dnsrecord` does -
+name, type and data) are skipped rather than recreated. If any record in
+the batch fails to create, the module fails and reports the per-record
+error messages; records that succeeded in the same batch are *not*
+rolled back.
+
+==== Examples
+
+.Bulk DNS record creation example
+[source,yaml]
+----
+- name: Create several DNS records in one zone with a single API call
+  menandmice.ansible_micetro.dnsrecords:
+    dnszone: example.net.
+    records:
+      - name: host1
+        data: 172.16.17.10
+      - name: host2
+        data: 172.16.17.11
+      - name: mail
+        data: "10 mailhost"
+        rrtype: MX
+        ttl: 86400
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----
