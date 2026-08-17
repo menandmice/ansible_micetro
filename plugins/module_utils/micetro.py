@@ -12,10 +12,12 @@ __metaclass__ = type
 
 import hashlib
 import os
+import re
 import time
 from ansible.module_utils._text import to_native
 from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError
+from ansible.module_utils.six.moves.urllib.parse import quote
 from ansible.module_utils.urls import open_url, SSLValidationError
 
 try:
@@ -39,6 +41,12 @@ TRUEFALSE = {
 # docs/API_GAP_ASSESSMENT.md for why this replaced the old unversioned,
 # PascalCase API.
 API_BASE = "mmws/api/v2"
+
+# Matches the Micetro Management Console's own disambiguated zone-name
+# format, e.g. "example.com (internal)", so a `dnszone`-style module
+# param can select a specific DNS view when a BIND server has several
+# views with the same zone name in each (issue #18).
+VIEW_SUFFIX_RE = re.compile(r"^(.*\S)\s+\(([^()]+)\)$")
 
 # Cache of active session tokens, keyed by (mm_url, mm_user), so a single
 # module/lookup run doesn't log in again for every API call it makes.
@@ -351,6 +359,91 @@ def get_single_refs(objname, mm_provider):
         return resp
 
     return "Unknown error"
+
+
+def resolve_dns_zone_ref(dnszone_param, mm_provider):
+    """Resolve a `dnszone`-style module param to a single DNS zone ref.
+
+    Accepts the Management Console's own disambiguated display format,
+    "zonename (viewname)", to select a specific DNS view when a BIND
+    server has several views sharing the same zone name (issue #18).
+    Shared by dnsrecord.py and dnsrecords.py so the view/zone lookup
+    (and its error handling) only lives in one place.
+
+    Returns a dict with either:
+      - {"ref": ..., "name": ..., "display": ...} on success, or
+      - {"invalid": True, "warnings": ..., "display": ...} on failure -
+        the same "invalid" convention get_single_refs() uses, so
+        callers can branch on it the same way.
+    """
+    dnszone_param = dnszone_param.strip()
+    view_match = VIEW_SUFFIX_RE.match(dnszone_param)
+    if view_match:
+        zone_name, view_name = view_match.group(1), view_match.group(2)
+    else:
+        zone_name, view_name = dnszone_param, None
+
+    # Zone MUST end with a '.' and I can imagine that this is forgotten
+    if zone_name[-1] != ".":
+        zone_name += "."
+    display = "%s (%s)" % (zone_name, view_name) if view_name else zone_name
+
+    dnsview_ref = None
+    if view_name:
+        viewrefs = "dnsViews?filter=%s" % quote(view_name)
+        viewresp = get_single_refs(viewrefs, mm_provider)
+        if viewresp.get("invalid") or viewresp.get("totalResults", 1) == 0:
+            return {
+                "invalid": True,
+                "warnings": "DNS view '%s' does not exist" % view_name,
+                "display": display,
+            }
+        dnsview_ref = viewresp["dnsViews"][0]["ref"]
+
+    if dnsview_ref:
+        refs = "dnsZones?filter=%s&dnsViewRef=%s" % (
+            quote(zone_name),
+            dnsview_ref,
+        )
+    else:
+        refs = "dnsZones?filter=%s" % quote(zone_name)
+    zoneresp = get_single_refs(refs, mm_provider)
+    if zoneresp.get("invalid"):
+        # e.g. an ambiguous filter match across views when no view was
+        # given.
+        return {
+            "invalid": True,
+            "warnings": "Failed to look up DNS zone '%s': %s"
+            % (display, zoneresp.get("warnings")),
+            "display": display,
+        }
+    if zoneresp.get("totalResults", 1) == 0:
+        return {
+            "invalid": True,
+            "warnings": "DNS Zone '%s' does not exist" % display,
+            "display": display,
+        }
+
+    # find the correct zone from the returned group (could be more than one)
+    zoneref = None
+    if len(zoneresp["dnsZones"]) == 1:
+        zoneref = zoneresp["dnsZones"][0]["ref"]
+    else:
+        for zr in zoneresp["dnsZones"]:
+            if zr["name"] == zone_name:
+                if zr["type"] in ["Primary", "Master"]:
+                    if "dnsScopeName" not in zr:
+                        zoneref = zr["ref"]
+                        break
+
+    if zoneref is None:
+        return {
+            "invalid": True,
+            "warnings": "DNS Zone '%s' does not exist" % display,
+            "display": display,
+        }
+
+    return {"ref": zoneref, "name": zone_name, "display": display}
 
 
 def get_dhcp_scopes(mm_provider, ipaddress):

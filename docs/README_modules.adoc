@@ -27,3 +27,5 @@ include::README_dhcpaddresspool.adoc[]
 include::README_zone.adoc[]
 
 include::README_dnsrecord.adoc[]
+
+include::README_dnsrecords.adoc[]

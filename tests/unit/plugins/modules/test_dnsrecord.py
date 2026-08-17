@@ -1,12 +1,9 @@
-"""Unit tests for plugins/modules/dnsrecord.py's zone/view lookup.
+"""Unit tests for plugins/modules/dnsrecord.py.
 
-Regression coverage for issue #18: on a BIND server with several DNS
-views sharing a zone name, the bare-name `dnszone` filter can come back
-ambiguous, and dnsrecord.py indexed straight into `zoneresp["dnsZones"]`
-without checking for that, producing a raw KeyError instead of a clean
-module failure. dnszone now also accepts the Management Console's own
-disambiguated format, "zonename (viewname)", to resolve the ambiguity
-up front via a dnsViewRef-scoped filter.
+Zone/view resolution itself now lives in module_utils.micetro's
+resolve_dns_zone_ref() (shared with dnsrecords.py) and is covered by
+tests/unit/plugins/module_utils/test_micetro.py. These tests just check
+that dnsrecord.py calls it correctly and handles both outcomes.
 """
 
 import pytest
@@ -28,7 +25,11 @@ MM_PROVIDER = {
     "mm_password": "apipasswd",
 }
 
-ZONE = {"ref": "dnsZones/1", "name": "example.net.", "type": "Primary"}
+ZONEINFO = {
+    "ref": "dnsZones/1",
+    "name": "example.net.",
+    "display": "example.net.",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -42,111 +43,62 @@ def _run(**module_args):
     dnsrecord.run_module()
 
 
-class TestBareZoneName:
-    def test_looks_up_zone_by_bare_filter(self, mocker):
-        get_single_refs = mocker.patch.object(
-            dnsrecord,
-            "get_single_refs",
-            side_effect=[
-                {"totalResults": 1, "dnsZones": [ZONE]},
-                {"dnsRecords": [], "totalResults": 0},
-                {"dnsRecords": [], "totalResults": 0},
-            ],
-        )
-        mocker.patch.object(
-            dnsrecord,
-            "doapi",
-            return_value={
-                "changed": True,
-                "message": {"result": {"errors": None}},
-            },
-        )
+def test_creates_record_using_resolved_zone_ref(mocker):
+    mocker.patch.object(
+        dnsrecord, "resolve_dns_zone_ref", return_value=ZONEINFO
+    )
+    get_single_refs = mocker.patch.object(
+        dnsrecord,
+        "get_single_refs",
+        side_effect=[
+            {"dnsRecords": [], "totalResults": 0},
+            {"dnsRecords": [], "totalResults": 0},
+        ],
+    )
+    doapi = mocker.patch.object(
+        dnsrecord,
+        "doapi",
+        return_value={
+            "changed": True,
+            "message": {"result": {"errors": None}},
+        },
+    )
 
-        with pytest.raises(AnsibleExitJson):
-            _run(
-                name="beatles",
-                data="172.16.17.2",
-                rrtype="A",
-                dnszone="example.net.",
-            )
-
-        first_call_url = get_single_refs.call_args_list[0][0][0]
-        assert first_call_url == "dnsZones?filter=example.net."
-
-    def test_ambiguous_zone_match_fails_cleanly_instead_of_keyerror(
-        self, mocker
-    ):
-        mocker.patch.object(
-            dnsrecord,
-            "get_single_refs",
-            return_value={"invalid": True, "warnings": "ambiguous match"},
+    with pytest.raises(AnsibleExitJson):
+        _run(
+            name="beatles",
+            data="172.16.17.2",
+            rrtype="A",
+            dnszone="example.net.",
         )
 
-        with pytest.raises(AnsibleFailJson) as exc:
-            _run(
-                name="beatles",
-                data="172.16.17.2",
-                rrtype="A",
-                dnszone="example.net.",
-            )
-
-        assert "ambiguous match" in exc.value.args[0]["msg"]
+    # The record lookup is scoped under the ref resolve_dns_zone_ref
+    # returned, not a bare zone name.
+    assert get_single_refs.call_args_list[0][0][0].startswith(
+        "dnsZones/1/dnsRecords?"
+    )
+    doapi.assert_called_once()
 
 
-class TestViewDisambiguatedZoneName:
-    def test_resolves_view_then_filters_zone_by_dnsviewref(self, mocker):
-        get_single_refs = mocker.patch.object(
-            dnsrecord,
-            "get_single_refs",
-            side_effect=[
-                {
-                    "totalResults": 1,
-                    "dnsViews": [{"ref": "dnsViews/3", "name": "internal"}],
-                },
-                {"totalResults": 1, "dnsZones": [ZONE]},
-                {"dnsRecords": [], "totalResults": 0},
-                {"dnsRecords": [], "totalResults": 0},
-            ],
-        )
-        mocker.patch.object(
-            dnsrecord,
-            "doapi",
-            return_value={
-                "changed": True,
-                "message": {"result": {"errors": None}},
-            },
+def test_invalid_zone_fails_cleanly(mocker):
+    mocker.patch.object(
+        dnsrecord,
+        "resolve_dns_zone_ref",
+        return_value={
+            "invalid": True,
+            "warnings": "DNS Zone 'example.net.' does not exist",
+        },
+    )
+    get_single_refs = mocker.patch.object(dnsrecord, "get_single_refs")
+
+    with pytest.raises(AnsibleFailJson) as exc:
+        _run(
+            name="beatles",
+            data="172.16.17.2",
+            rrtype="A",
+            dnszone="example.net.",
         )
 
-        with pytest.raises(AnsibleExitJson):
-            _run(
-                name="beatles",
-                data="172.16.17.2",
-                rrtype="A",
-                dnszone="example.net. (internal)",
-            )
-
-        view_lookup_url = get_single_refs.call_args_list[0][0][0]
-        zone_lookup_url = get_single_refs.call_args_list[1][0][0]
-        assert view_lookup_url == "dnsViews?filter=internal"
-        assert zone_lookup_url == (
-            "dnsZones?filter=example.net.&dnsViewRef=dnsViews/3"
-        )
-
-    def test_unknown_view_fails_cleanly(self, mocker):
-        get_single_refs = mocker.patch.object(
-            dnsrecord,
-            "get_single_refs",
-            return_value={"totalResults": 0},
-        )
-
-        with pytest.raises(AnsibleFailJson) as exc:
-            _run(
-                name="beatles",
-                data="172.16.17.2",
-                rrtype="A",
-                dnszone="example.net. (nosuchview)",
-            )
-
-        assert "nosuchview" in exc.value.args[0]["msg"]
-        # Never got to the zone lookup at all.
-        assert get_single_refs.call_count == 1
+    assert "does not exist" in exc.value.args[0]["msg"]
+    # Never got to the record lookup at all.
+    get_single_refs.assert_not_called()
