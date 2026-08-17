@@ -15,8 +15,11 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import re
+
 # All imports
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.six.moves.urllib.parse import quote
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
@@ -60,7 +63,11 @@ DOCUMENTATION = r"""
       type: str
       required: True
     dnszone:
-      description: The DNS zone where the action should take place.
+      description:
+        - The DNS zone where the action should take place.
+        - If a BIND server has several views with the same zone name in
+          each, disambiguate with the Management Console's own display
+          format, C(zonename (viewname)), e.g. V(example.com (internal)).
       type: str
       required: True
     rrtype:
@@ -199,6 +206,12 @@ RRTYPES = [
 # Resource types with tab seperation in the data field.
 RRTYPES_TAB = ["MX", "SRV", "NAPTR", "CAA", "CERT", "HINFO", "TLSA"]
 
+# Matches the Micetro Management Console's own disambiguated zone-name
+# format, e.g. "example.com (internal)", so `dnszone` can select a
+# specific DNS view when a BIND server has several views with the same
+# zone name in each (issue #18).
+VIEW_SUFFIX_RE = re.compile(r"^(.*\S)\s+\(([^()]+)\)$")
+
 
 def run_module():
     """Run Ansible module."""
@@ -257,15 +270,47 @@ def run_module():
     rrtype = module.params.get("rrtype").strip().upper()
     if rrtype in RRTYPES_TAB:
         rrdata = "\t".join(rrdata.split())
+    # dnszone can optionally disambiguate same-named zones in different
+    # DNS views the same way the Management Console displays them:
+    # "example.com (internal)".
+    dnszone_param = module.params.get("dnszone").strip()
+    view_match = VIEW_SUFFIX_RE.match(dnszone_param)
+    if view_match:
+        zone_name, view_name = view_match.group(1), view_match.group(2)
+    else:
+        zone_name, view_name = dnszone_param, None
+
     # Zone MUST end with a '.' and I can imagine that this
     # is forgotten
-    rrzone = module.params.get("dnszone").strip()
-    if rrzone[-1] != ".":
-        rrzone += "."
+    if zone_name[-1] != ".":
+        zone_name += "."
+    rrzone = "%s (%s)" % (zone_name, view_name) if view_name else zone_name
+
+    dnsview_ref = None
+    if view_name:
+        viewrefs = "dnsViews?filter=%s" % quote(view_name)
+        viewresp = get_single_refs(viewrefs, mm_provider)
+        if viewresp.get("invalid") or viewresp.get("totalResults", 1) == 0:
+            module.fail_json(msg="DNS view '%s' does not exist" % view_name)
+        dnsview_ref = viewresp["dnsViews"][0]["ref"]
 
     # Try to get all name of DNS Zone info
-    refs = "dnsZones?filter=%s" % rrzone
+    if dnsview_ref:
+        refs = "dnsZones?filter=%s&dnsViewRef=%s" % (
+            quote(zone_name),
+            dnsview_ref,
+        )
+    else:
+        refs = "dnsZones?filter=%s" % quote(zone_name)
     zoneresp = get_single_refs(refs, mm_provider)
+    if zoneresp.get("invalid"):
+        # e.g. an ambiguous filter match across views when no view was
+        # given - fail cleanly instead of KeyError'ing on "dnsZones"
+        # below.
+        module.fail_json(
+            msg="Failed to look up DNS zone '%s': %s"
+            % (rrzone, zoneresp.get("warnings"))
+        )
     if zoneresp.get("totalResults", 1) == 0:
         # Zone does not exists
         module.fail_json(msg="DNS Zone '%s' does not exist" % rrzone)
@@ -276,7 +321,7 @@ def run_module():
         zoneref = zoneresp["dnsZones"][0]["ref"]
     else:
         for zr in zoneresp["dnsZones"]:
-            if zr["name"] == rrzone:
+            if zr["name"] == zone_name:
                 if zr["type"] in ["Primary", "Master"]:
                     if "dnsScopeName" not in zr:
                         zoneref = zr["ref"]
