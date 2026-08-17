@@ -17,8 +17,15 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils import 
 
 
 @pytest.fixture(autouse=True)
-def _clear_session_cache():
-    """Every test starts with no cached session tokens."""
+def _clear_session_cache(mocker, tmp_path):
+    """Every test starts with no cached session tokens, in-process or on
+    disk. Redirects the on-disk cache to a throwaway tmp_path so tests
+    never read/write the real ~/.ansible/tmp/mm_sessions on the machine
+    running them.
+    """
+    mocker.patch.object(
+        micetro, "_session_cache_dir", return_value=str(tmp_path)
+    )
     micetro._SESSIONS.clear()
     yield
     micetro._SESSIONS.clear()
@@ -119,6 +126,52 @@ class TestSessionToken:
         micetro._session_token(other_provider)
 
         assert len(micetro._SESSIONS) == 2
+
+
+class TestSessionDiskCache:
+    """Regression coverage for issue #16: modules run as a brand-new
+    AnsiballZ subprocess per task with an empty in-process `_SESSIONS`,
+    so reuse across tasks in the same playbook run depends entirely on
+    the on-disk cache.
+    """
+
+    def test_reused_by_a_fresh_process_within_ttl(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        micetro._session_token(MM_PROVIDER)
+        micetro._SESSIONS.clear()  # simulate a new AnsiballZ subprocess
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
+
+    def test_expired_disk_cache_is_not_reused(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+        path = micetro._session_cache_path(MM_PROVIDER)
+        with open(path, "w") as cachefile:
+            json.dump({"token": "stale-token", "expires_at": 0}, cachefile)
+
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
+
+    def test_survives_missing_fcntl(self, mocker):
+        """Non-POSIX platforms (no fcntl) just skip the disk cache
+        entirely rather than failing."""
+        mocker.patch.object(micetro, "fcntl", None)
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
 
 
 class TestDoapi:

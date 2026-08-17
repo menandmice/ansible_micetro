@@ -198,6 +198,15 @@ TYPE2TYPE = {
     "number": "Integer",
 }
 
+# dest values confirmed live to reject cloudTags/listItems on a String
+# (proptype=text) propertyDefinition create/update: the ipamRecords
+# backend's WSDL layer doesn't know about a "cloudTags" field at all and
+# fails the whole call with "Unknown WSDL element" - even when the list
+# is empty. Not known whether any other dest actually supports them, so
+# only the confirmed-broken one is excluded rather than guessing at an
+# allow-list.
+TEXT_EXTRAS_UNSUPPORTED_DEST = {"ipaddress"}
+
 
 def run_module():
     """Run Ansible module."""
@@ -276,6 +285,8 @@ def run_module():
             )
             databody = {"saveComment": "Ansible API"}
             result = doapi(url, http_method, mm_provider, databody)
+            if result.get("warnings"):
+                module.fail_json(msg=result["warnings"])
         module.exit_json(**result)
 
     # Whether adding or updating the property, the databody is almost the
@@ -293,7 +304,10 @@ def run_module():
     }
 
     # Add the extra parameters when wanted
-    if module.params.get("proptype") == "text":
+    if (
+        module.params.get("proptype") == "text"
+        and module.params.get("dest") not in TEXT_EXTRAS_UNSUPPORTED_DEST
+    ):
         # Tags are only supported for customfields of type string
         databody["propertyDefinition"]["cloudTags"] = module.params.get(
             "cloudtags", []
@@ -338,6 +352,8 @@ def run_module():
 
     databody["saveComment"] = "Ansible API"
     result = doapi(url, http_method, mm_provider, databody)
+    if result.get("warnings"):
+        module.fail_json(msg=result["warnings"])
 
     # return collected results
     module.exit_json(**result)
