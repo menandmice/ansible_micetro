@@ -78,6 +78,7 @@ DOCUMENTATION = r"""
       description: True if the zone is Active Directory integrated.
       type: bool
       required: False
+      aliases: [ adintegrate ]
     adreplicationtype:
       description: Type of the AD replication.
       type: str
@@ -169,7 +170,7 @@ def run_module():
         ),
         dynamic=dict(type="bool", required=False, default=False),
         masters=dict(type="list", required=False),
-        adintegrated=dict(type="bool", required=False),
+        adintegrated=dict(type="bool", required=False, aliases=["adintegrate"]),
         adreplicationtype=dict(type="str", required=False),
         adpartition=dict(type="str", required=False),
         customproperties=dict(type="dict", required=False),
