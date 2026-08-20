@@ -76,3 +76,7 @@ _load(
     "ansible_collections.menandmice.ansible_micetro.plugins.modules.dnsrecords",
     "plugins/modules/dnsrecords.py",
 )
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcp",
+    "plugins/modules/dhcp.py",
+)

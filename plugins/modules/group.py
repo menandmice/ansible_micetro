@@ -51,6 +51,7 @@ DOCUMENTATION = r"""
       description: Description of the group.
       required: False
       type: str
+      aliases: [ descr ]
     users:
       description: List of users to add to this group.
       type: list
@@ -125,7 +126,7 @@ def run_module():
             choices=["absent", "present"],
         ),
         name=dict(type="str", required=True, aliases=["group"]),
-        desc=dict(type="str", required=False),
+        desc=dict(type="str", required=False, aliases=["descr"]),
         users=dict(type="list", required=False),
         roles=dict(type="list", required=False),
         mm_provider=dict(

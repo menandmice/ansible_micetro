@@ -58,6 +58,7 @@ DOCUMENTATION = r"""
       description: Description of the user.
       required: False
       type: str
+      aliases: [ descr ]
     email:
       description: The users email address.
       required: False
@@ -152,7 +153,7 @@ def run_module():
         username=dict(type="str", required=True, aliases=["user"]),
         password=dict(type="str", required=False, no_log=True),
         full_name=dict(type="str", required=False),
-        desc=dict(type="str", required=False),
+        desc=dict(type="str", required=False, aliases=["descr"]),
         email=dict(type="str", required=False),
         authentication_type=dict(type="str", required=False),
         groups=dict(type="list", required=False),

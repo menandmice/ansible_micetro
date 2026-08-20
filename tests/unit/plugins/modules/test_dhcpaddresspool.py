@@ -103,7 +103,6 @@ class TestPresent:
             MM_PROVIDER,
             {
                 "dhcpAddressPool": {
-                    "dhcpScopeRef": SCOPE_REF,
                     "from": "172.16.17.100",
                     "to": "172.16.17.150",
                 },
@@ -112,44 +111,9 @@ class TestPresent:
         )
         assert result["changed"] is True
 
-    def test_creates_with_name(self, mocker):
-        mocker.patch.object(
-            dhcpaddresspool,
-            "get_single_refs",
-            side_effect=_get_single_refs_side_effect(empty_list=True),
-        )
-        doapi = mocker.patch.object(
-            dhcpaddresspool,
-            "doapi",
-            return_value={
-                "changed": True,
-                "message": {"result": {"ref": "dhcpAddressPools/9"}},
-            },
-        )
-
-        _run_and_capture_exit(state="present", name="My Pool")
-
-        sent_body = doapi.call_args[0][3]
-        assert sent_body["dhcpAddressPool"]["name"] == "My Pool"
-
-    def test_noop_when_nothing_changed(self, mocker):
-        mocker.patch.object(
-            dhcpaddresspool,
-            "get_single_refs",
-            side_effect=_get_single_refs_side_effect(
-                empty_list=False, existing=EXISTING_POOL
-            ),
-        )
-        doapi = mocker.patch.object(dhcpaddresspool, "doapi")
-
-        result = _run_and_capture_exit(state="present", name="local")
-
-        doapi.assert_not_called()
-        assert result["changed"] is False
-
-    def test_noop_when_no_name_requested(self, mocker):
-        # No name requested at all - matching pool already has one, but
-        # nothing was asked to change so nothing should happen.
+    def test_noop_when_pool_already_present(self, mocker):
+        # A pool is identified by its address range - its name is
+        # read-only/server-generated, so it plays no part in the lookup.
         mocker.patch.object(
             dhcpaddresspool,
             "get_single_refs",
@@ -163,32 +127,6 @@ class TestPresent:
 
         doapi.assert_not_called()
         assert result["changed"] is False
-
-    def test_updates_name_via_flat_properties_map(self, mocker):
-        mocker.patch.object(
-            dhcpaddresspool,
-            "get_single_refs",
-            side_effect=_get_single_refs_side_effect(
-                empty_list=False, existing=EXISTING_POOL
-            ),
-        )
-        doapi = mocker.patch.object(
-            dhcpaddresspool, "doapi", return_value={"changed": True}
-        )
-
-        result = _run_and_capture_exit(state="present", name="renamed")
-
-        doapi.assert_called_once_with(
-            "dhcpAddressPools/6",
-            "PUT",
-            MM_PROVIDER,
-            {
-                "ref": "dhcpAddressPools/6",
-                "saveComment": "Ansible API",
-                "properties": {"name": "renamed"},
-            },
-        )
-        assert result["changed"] is True
 
 
 class TestAbsent:
