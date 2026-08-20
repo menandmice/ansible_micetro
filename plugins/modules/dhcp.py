@@ -275,7 +275,9 @@ def run_module():
                         "reservationMethod": "HardwareAddress",
                         "addresses": ipaddress,
                     }
-                    dhcp_reservation.update(_optional_reservation_fields(module))
+                    dhcp_reservation.update(
+                        _optional_reservation_fields(module)
+                    )
                     databody = {
                         "saveComment": "Ansible API",
                         "dhcpReservation": dhcp_reservation,
