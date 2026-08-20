@@ -120,6 +120,27 @@ message:
     returned: always
 """
 
+# Maps each optional module param to its API field name. Sending any of
+# these unconditionally (even as an empty string) makes MS DHCP servers
+# reject the whole reservation request outright - e.g. "Property
+# ddnsHostName is not valid for reservations on MS DHCP servers" - so
+# each one is only included in the request body when actually set.
+OPTIONAL_FIELDS = {
+    "ddnshost": "ddnsHostName",
+    "filename": "filename",
+    "servername": "serverName",
+    "nextserver": "nextServer",
+}
+
+
+def _optional_reservation_fields(module):
+    """Return only the optional reservation fields the user actually set."""
+    return {
+        api_field: module.params[param]
+        for param, api_field in OPTIONAL_FIELDS.items()
+        if module.params.get(param) is not None
+    }
+
 
 def run_module():
     """Run Ansible module."""
@@ -134,10 +155,10 @@ def run_module():
         name=dict(type="str", required=True),
         ipaddress=dict(type="list", required=True),
         macaddress=dict(type="str", required=True),
-        ddnshost=dict(type="str", required=False, default=""),
-        filename=dict(type="str", required=False, default=""),
-        servername=dict(type="str", required=False, default=""),
-        nextserver=dict(type="str", required=False, default=""),
+        ddnshost=dict(type="str", required=False),
+        filename=dict(type="str", required=False),
+        servername=dict(type="str", required=False),
+        nextserver=dict(type="str", required=False),
         deleteunspecified=dict(type="bool", required=False, default=False),
         mm_provider=dict(
             type="dict",
@@ -195,21 +216,19 @@ def run_module():
                 reservations = resp["ipamRecord"]["dhcpReservations"]
                 http_method = "PUT"
                 for reservation in reservations:
+                    properties = {
+                        "name": module.params["name"],
+                        "clientIdentifier": module.params["macaddress"],
+                        "addresses": ipaddress,
+                    }
+                    properties.update(_optional_reservation_fields(module))
                     databody = {
                         "ref": reservation["ref"],
                         "saveComment": "Ansible API",
                         "deleteUnspecified": module.params.get(
                             "deleteunspecified", False
                         ),
-                        "properties": {
-                            "name": module.params["name"],
-                            "clientIdentifier": module.params["macaddress"],
-                            "addresses": ipaddress,
-                            "ddnsHostName": module.params.get("ddnshost", ""),
-                            "filename": module.params.get("filename", ""),
-                            "serverName": module.params.get("servername", ""),
-                            "nextServer": module.params.get("nextserver", ""),
-                        },
+                        "properties": properties,
                     }
 
                     # Check if the requested data is equal to the current data
@@ -250,18 +269,16 @@ def run_module():
                 for scope in scopes:
                     http_method = "POST"
                     url = "%s/dhcpReservations" % scope
+                    dhcp_reservation = {
+                        "name": module.params["name"],
+                        "clientIdentifier": module.params["macaddress"],
+                        "reservationMethod": "HardwareAddress",
+                        "addresses": ipaddress,
+                    }
+                    dhcp_reservation.update(_optional_reservation_fields(module))
                     databody = {
                         "saveComment": "Ansible API",
-                        "dhcpReservation": {
-                            "name": module.params["name"],
-                            "clientIdentifier": module.params["macaddress"],
-                            "reservationMethod": "HardwareAddress",
-                            "addresses": ipaddress,
-                            "ddnsHostName": module.params.get("ddnshost", ""),
-                            "filename": module.params.get("filename", ""),
-                            "serverName": module.params.get("servername", ""),
-                            "nextServer": module.params.get("nextserver", ""),
-                        },
+                        "dhcpReservation": dhcp_reservation,
                     }
 
                     # Execute the API
