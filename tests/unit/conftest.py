@@ -80,3 +80,7 @@ _load(
     "ansible_collections.menandmice.ansible_micetro.plugins.modules.dhcp",
     "plugins/modules/dhcp.py",
 )
+_load(
+    "ansible_collections.menandmice.ansible_micetro.plugins.lookup.ipinfo",
+    "plugins/lookup/ipinfo.py",
+)

@@ -117,5 +117,5 @@ class LookupModule(LookupBase):
             raise AnsibleError(result.get("warnings"))
 
         if isinstance(result, dict):
-            return result["message"]["result"]["ipamRecord"]
-        return result
+            return [result["message"]["result"]["ipamRecord"]]
+        return [result]
