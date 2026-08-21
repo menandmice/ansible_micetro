@@ -1,0 +1,468 @@
+"""Unit tests for the v2 API foundation in module_utils/micetro.py.
+
+Covers session-token login/caching, the Bearer auth header, the
+single-relogin-then-retry behavior on an expired session (HTTP 401),
+and the camelCase v2 endpoint paths used by getrefs()/get_dhcp_scopes().
+"""
+
+import io
+import json
+
+import pytest
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+
+from ansible_collections.menandmice.ansible_micetro.plugins.module_utils import (
+    micetro,
+)
+
+
+@pytest.fixture(autouse=True)
+def _clear_session_cache(mocker, tmp_path):
+    """Every test starts with no cached session tokens, in-process or on
+    disk. Redirects the on-disk cache to a throwaway tmp_path so tests
+    never read/write the real ~/.ansible/tmp/mm_sessions on the machine
+    running them.
+    """
+    mocker.patch.object(
+        micetro, "_session_cache_dir", return_value=str(tmp_path)
+    )
+    micetro._SESSIONS.clear()
+    yield
+    micetro._SESSIONS.clear()
+
+
+MM_PROVIDER = {
+    "mm_url": "http://micetro.example.net",
+    "mm_user": "apiuser",
+    "mm_password": "apipasswd",
+}
+
+
+class FakeResponse:
+    """Minimal stand-in for what open_url() returns."""
+
+    def __init__(self, code, body):
+        self.code = code
+        self.reason = "No Content"
+        self._body = body.encode("utf8") if isinstance(body, str) else body
+
+    def read(self):
+        return self._body
+
+
+def _http_error(code, error_body):
+    body = json.dumps(error_body).encode("utf8")
+    return HTTPError(
+        "http://micetro.example.net/mmws/api/v2/whatever",
+        code,
+        "error",
+        {},
+        io.BytesIO(body),
+    )
+
+
+def _session_body(token="tok-123"):
+    return json.dumps({"result": {"session": token}})
+
+
+class TestLogin:
+    def test_login_returns_token_and_uses_loginname_field(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        token = micetro._login(MM_PROVIDER)
+
+        assert token == "tok-123"
+        _, kwargs = open_url.call_args
+        sent = json.loads(kwargs["data"].decode("utf8"))
+        assert sent == {"loginName": "apiuser", "password": "apipasswd"}
+        assert open_url.call_args[0][0] == (
+            "http://micetro.example.net/mmws/api/v2/micetro/sessions"
+        )
+
+    def test_login_http_error_raises_micetro_api_error(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=_http_error(
+                401, {"error": {"message": "bad creds", "code": 1}}
+            ),
+        )
+
+        with pytest.raises(micetro.MicetroAPIError):
+            micetro._login(MM_PROVIDER)
+
+
+class TestSessionToken:
+    def test_caches_token_across_calls(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        first = micetro._session_token(MM_PROVIDER)
+        second = micetro._session_token(MM_PROVIDER)
+
+        assert first == second == "tok-123"
+        assert open_url.call_count == 1
+
+    def test_force_bypasses_cache(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        micetro._session_token(MM_PROVIDER)
+        micetro._session_token(MM_PROVIDER, force=True)
+
+        assert open_url.call_count == 2
+
+    def test_different_providers_get_separate_sessions(self, mocker):
+        mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+        other_provider = dict(MM_PROVIDER, mm_user="otheruser")
+
+        micetro._session_token(MM_PROVIDER)
+        micetro._session_token(other_provider)
+
+        assert len(micetro._SESSIONS) == 2
+
+
+class TestSessionDiskCache:
+    """Regression coverage for issue #16: modules run as a brand-new
+    AnsiballZ subprocess per task with an empty in-process `_SESSIONS`,
+    so reuse across tasks in the same playbook run depends entirely on
+    the on-disk cache.
+    """
+
+    def test_reused_by_a_fresh_process_within_ttl(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        micetro._session_token(MM_PROVIDER)
+        micetro._SESSIONS.clear()  # simulate a new AnsiballZ subprocess
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
+
+    def test_expired_disk_cache_is_not_reused(self, mocker):
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+        path = micetro._session_cache_path(MM_PROVIDER)
+        with open(path, "w") as cachefile:
+            json.dump({"token": "stale-token", "expires_at": 0}, cachefile)
+
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
+
+    def test_survives_missing_fcntl(self, mocker):
+        """Non-POSIX platforms (no fcntl) just skip the disk cache
+        entirely rather than failing."""
+        mocker.patch.object(micetro, "fcntl", None)
+        open_url = mocker.patch.object(
+            micetro, "open_url", return_value=FakeResponse(201, _session_body())
+        )
+
+        token = micetro._session_token(MM_PROVIDER)
+
+        assert token == "tok-123"
+        assert open_url.call_count == 1
+
+
+class TestDoapi:
+    def test_get_success_returns_message_and_changed(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body()),
+                FakeResponse(200, json.dumps({"result": {"groups": []}})),
+            ],
+        )
+
+        result = micetro.doapi("groups", "GET", MM_PROVIDER, {})
+
+        assert result == {
+            "changed": True,
+            "message": {"result": {"groups": []}},
+        }
+
+    def test_sends_bearer_token_and_v2_base_path(self, mocker):
+        open_url = mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body("abc")),
+                FakeResponse(200, json.dumps({"result": {}})),
+            ],
+        )
+
+        micetro.doapi("groups", "GET", MM_PROVIDER, {})
+
+        request_call = open_url.call_args_list[1]
+        assert (
+            request_call[0][0]
+            == "http://micetro.example.net/mmws/api/v2/groups"
+        )
+        assert request_call[1]["headers"]["Authorization"] == "Bearer abc"
+
+    def test_204_no_content_becomes_empty_message(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body()),
+                FakeResponse(204, ""),
+            ],
+        )
+
+        result = micetro.doapi("groups/4", "DELETE", MM_PROVIDER, {})
+
+        assert result == {"changed": True, "message": ""}
+
+    def test_http_error_returns_warnings_without_raising(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body()),
+                _http_error(
+                    404, {"error": {"message": "not found", "code": 42}}
+                ),
+            ],
+        )
+
+        result = micetro.doapi("groups/999", "GET", MM_PROVIDER, {})
+
+        assert result["changed"] is False
+        assert "not found" in result["warnings"]
+        assert "42" in result["warnings"]
+
+    def test_401_triggers_single_relogin_then_retries_successfully(
+        self, mocker
+    ):
+        open_url = mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body("first-token")),
+                _http_error(
+                    401,
+                    {"error": {"message": "Missing Session ID.", "code": 5002}},
+                ),
+                FakeResponse(201, _session_body("second-token")),
+                FakeResponse(200, json.dumps({"result": {"ok": True}})),
+            ],
+        )
+
+        result = micetro.doapi("groups", "GET", MM_PROVIDER, {})
+
+        assert result == {"changed": True, "message": {"result": {"ok": True}}}
+        assert open_url.call_count == 4
+        last_request_headers = open_url.call_args_list[-1][1]["headers"]
+        assert last_request_headers["Authorization"] == "Bearer second-token"
+
+    def test_persistent_401_does_not_loop_forever(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "open_url",
+            side_effect=[
+                FakeResponse(201, _session_body("first-token")),
+                _http_error(
+                    401,
+                    {"error": {"message": "Missing Session ID.", "code": 5002}},
+                ),
+                FakeResponse(201, _session_body("second-token")),
+                _http_error(
+                    401,
+                    {"error": {"message": "Missing Session ID.", "code": 5002}},
+                ),
+            ],
+        )
+
+        result = micetro.doapi("groups", "GET", MM_PROVIDER, {})
+
+        # Only relogs in once; the second 401 is reported, not retried again.
+        assert result["changed"] is False
+        assert "Missing Session ID" in result["warnings"]
+
+
+class TestGetrefsAndFriends:
+    def test_getrefs_uses_get_and_passed_objtype(self, mocker):
+        doapi = mocker.patch.object(
+            micetro, "doapi", return_value={"message": {}}
+        )
+
+        micetro.getrefs("groups", MM_PROVIDER)
+
+        doapi.assert_called_once_with("groups", "GET", MM_PROVIDER, {})
+
+    def test_get_single_refs_unwraps_result(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "doapi",
+            return_value={"message": {"result": {"groups": []}}},
+        )
+
+        result = micetro.get_single_refs("groups", MM_PROVIDER)
+
+        assert result == {"groups": []}
+
+    def test_get_single_refs_marks_warnings_invalid(self, mocker):
+        mocker.patch.object(micetro, "doapi", return_value={"warnings": "boom"})
+
+        result = micetro.get_single_refs("groups/999", MM_PROVIDER)
+
+        assert result["invalid"] is True
+
+    def test_get_dhcp_scopes_uses_lowercase_ranges_endpoint(self, mocker):
+        doapi = mocker.patch.object(
+            micetro,
+            "doapi",
+            return_value={
+                "message": {
+                    "result": {
+                        "ranges": [
+                            {"dhcpScopes": [{"ref": "dhcpScopes/1"}]},
+                        ]
+                    }
+                }
+            },
+        )
+
+        scopes = micetro.get_dhcp_scopes(MM_PROVIDER, "172.16.17.2")
+
+        doapi.assert_called_once_with(
+            "ranges?filter=172.16.17.2", "GET", MM_PROVIDER, {}
+        )
+        assert scopes == ["dhcpScopes/1"]
+
+
+ZONE = {"ref": "dnsZones/1", "name": "example.net.", "type": "Primary"}
+
+
+class TestResolveDnsZoneRef:
+    """Regression coverage for issue #18, factored out of dnsrecord.py so
+    dnsrecords.py's bulk-create module can share the same view/zone
+    lookup instead of duplicating it.
+    """
+
+    def test_bare_zone_name_resolves_ref(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"totalResults": 1, "dnsZones": [ZONE]},
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        get_single_refs.assert_called_once_with(
+            "dnsZones?filter=example.net.", MM_PROVIDER
+        )
+        assert result == {
+            "ref": "dnsZones/1",
+            "name": "example.net.",
+            "display": "example.net.",
+        }
+
+    def test_appends_missing_trailing_dot(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"totalResults": 1, "dnsZones": [ZONE]},
+        )
+
+        micetro.resolve_dns_zone_ref("example.net", MM_PROVIDER)
+
+        get_single_refs.assert_called_once_with(
+            "dnsZones?filter=example.net.", MM_PROVIDER
+        )
+
+    def test_view_disambiguated_name_filters_by_dnsviewref(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            side_effect=[
+                {
+                    "totalResults": 1,
+                    "dnsViews": [{"ref": "dnsViews/3", "name": "internal"}],
+                },
+                {"totalResults": 1, "dnsZones": [ZONE]},
+            ],
+        )
+
+        result = micetro.resolve_dns_zone_ref(
+            "example.net. (internal)", MM_PROVIDER
+        )
+
+        assert get_single_refs.call_args_list[0][0][0] == (
+            "dnsViews?filter=internal"
+        )
+        assert get_single_refs.call_args_list[1][0][0] == (
+            "dnsZones?filter=example.net.&dnsViewRef=dnsViews/3"
+        )
+        assert result["ref"] == "dnsZones/1"
+        assert result["display"] == "example.net. (internal)"
+
+    def test_unknown_view_is_invalid_without_looking_up_zone(self, mocker):
+        get_single_refs = mocker.patch.object(
+            micetro, "get_single_refs", return_value={"totalResults": 0}
+        )
+
+        result = micetro.resolve_dns_zone_ref(
+            "example.net. (nosuchview)", MM_PROVIDER
+        )
+
+        assert result["invalid"] is True
+        assert "nosuchview" in result["warnings"]
+        get_single_refs.assert_called_once()
+
+    def test_ambiguous_zone_match_is_invalid_not_a_keyerror(self, mocker):
+        mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={"invalid": True, "warnings": "ambiguous match"},
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True
+        assert "ambiguous match" in result["warnings"]
+
+    def test_zone_not_found_is_invalid(self, mocker):
+        mocker.patch.object(
+            micetro, "get_single_refs", return_value={"totalResults": 0}
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True
+        assert "does not exist" in result["warnings"]
+
+    def test_multiple_zones_with_no_matching_candidate_is_invalid(self, mocker):
+        """None of the returned zones satisfy the name/Primary-or-Master/
+        no-dnsScopeName match criteria - zoneref stays unset, and that
+        must be reported as invalid rather than returned as None (which
+        would otherwise get baked into a "None/dnsRecords?..." URL
+        downstream).
+        """
+        mocker.patch.object(
+            micetro,
+            "get_single_refs",
+            return_value={
+                "totalResults": 2,
+                "dnsZones": [
+                    dict(ZONE, name="other.net."),
+                    dict(ZONE, type="Slave"),
+                ],
+            },
+        )
+
+        result = micetro.resolve_dns_zone_ref("example.net.", MM_PROVIDER)
+
+        assert result["invalid"] is True

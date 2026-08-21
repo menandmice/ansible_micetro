@@ -55,9 +55,18 @@ DOCUMENTATION = r"""
     dest:
       description:
         - The section where to define the custom property.
+        - Only object types that actually support custom properties on
+          the Micetro server are valid here. Several more object types
+          expose a C(propertyDefinitions) sub-resource in the API (e.g.
+          roles, users, groups, folders, DHCP scopes/groups/pools,
+          AD sites/forests, ...), but confirmed live against a real
+          server, all of those reject custom property creation with
+          "not supported" - the API path existing doesn't mean the
+          object type accepts custom properties.
       choices: [
                 dnsserver, dhcpserver, zone, iprange, ipaddress,
-                device, interface, cloudnet, cloudaccount
+                device, interface, cloudnet, cloudaccount,
+                dnsrecord, changerequest
       ]
       required: True
       type: str
@@ -144,6 +153,16 @@ message:
 """
 
 PROPTYPES = ["text", "yesno", "ipaddress", "number"]
+
+# Every one of these has a real "/{type}/{ref}/propertyDefinitions"
+# sub-resource in the v2 API, confirmed against the live swagger spec.
+# But most other object types that *also* expose that sub-resource
+# (roles, users, groups, folders, DHCP scopes/groups/pools/exclusions/
+# reservations/superscopes, AD forests/sites/site-links, address
+# spaces, appliances, report definitions, ...) reject custom property
+# creation outright when tested live: "Adding custom property for
+# object type "X" is not supported." Only dnsRecords and changeRequests
+# joined the original 9 as types that actually accept them.
 DESTTYPES = [
     "dnsserver",
     "dhcpserver",
@@ -154,18 +173,22 @@ DESTTYPES = [
     "interface",
     "cloudnet",
     "cloudaccount",
+    "dnsrecord",
+    "changerequest",
 ]
 
 DEST2URL = {
-    "dnsserver": "DNSServers",
-    "dhcpserver": "DHCPServers",
-    "zone": "DNSZones",
-    "iprange": "Ranges",
-    "ipaddress": "IPAMRecords",
-    "device": "Devices",
-    "interface": "Interfaces",
-    "cloudnet": "CloudNetworks",
-    "cloudaccount": "CloudServiceAccounts",
+    "dnsserver": "dnsServers",
+    "dhcpserver": "dhcpServers",
+    "zone": "dnsZones",
+    "iprange": "ranges",
+    "ipaddress": "ipamRecords",
+    "device": "devices",
+    "interface": "interfaces",
+    "cloudnet": "cloudNetworks",
+    "cloudaccount": "cloudServiceAccounts",
+    "dnsrecord": "dnsRecords",
+    "changerequest": "changeRequests",
 }
 
 TYPE2TYPE = {
@@ -174,6 +197,15 @@ TYPE2TYPE = {
     "ipaddress": "IPAddress",
     "number": "Integer",
 }
+
+# dest values confirmed live to reject cloudTags/listItems on a String
+# (proptype=text) propertyDefinition create/update: the ipamRecords
+# backend's WSDL layer doesn't know about a "cloudTags" field at all and
+# fails the whole call with "Unknown WSDL element" - even when the list
+# is empty. Not known whether any other dest actually supports them, so
+# only the confirmed-broken one is excluded rather than guessing at an
+# allow-list.
+TEXT_EXTRAS_UNSUPPORTED_DEST = {"ipaddress"}
 
 
 def run_module():
@@ -234,7 +266,7 @@ def run_module():
 
     # Check if the property is already present
     http_method = "GET"
-    url = "%s/1/PropertyDefinitions/%s" % (
+    url = "%s/1/propertyDefinitions/%s" % (
         DEST2URL[module.params.get("dest")],
         module.params.get("name"),
     )
@@ -247,12 +279,14 @@ def run_module():
         if not resp.get("warnings", None):
             # Property is present, deletion is required
             http_method = "DELETE"
-            url = "%s/1/PropertyDefinitions/%s" % (
+            url = "%s/1/propertyDefinitions/%s" % (
                 DEST2URL[module.params.get("dest")],
                 module.params.get("name"),
             )
             databody = {"saveComment": "Ansible API"}
             result = doapi(url, http_method, mm_provider, databody)
+            if result.get("warnings"):
+                module.fail_json(msg=result["warnings"])
         module.exit_json(**result)
 
     # Whether adding or updating the property, the databody is almost the
@@ -270,7 +304,10 @@ def run_module():
     }
 
     # Add the extra parameters when wanted
-    if module.params.get("proptype") == "text":
+    if (
+        module.params.get("proptype") == "text"
+        and module.params.get("dest") not in TEXT_EXTRAS_UNSUPPORTED_DEST
+    ):
         # Tags are only supported for customfields of type string
         databody["propertyDefinition"]["cloudTags"] = module.params.get(
             "cloudtags", []
@@ -284,7 +321,7 @@ def run_module():
     if resp.get("warnings", None):
         # Not there, yet. Create the property
         http_method = "POST"
-        url = "%s/1/PropertyDefinitions" % DEST2URL[module.params.get("dest")]
+        url = "%s/1/propertyDefinitions" % DEST2URL[module.params.get("dest")]
     else:
         # Property already exists, check if it needs an update
         curprop = resp["message"]["result"]
@@ -304,7 +341,7 @@ def run_module():
             module.exit_json(**result)
 
         http_method = "PUT"
-        url = "%s/1/PropertyDefinitions/%s" % (
+        url = "%s/1/propertyDefinitions/%s" % (
             DEST2URL[module.params.get("dest")],
             module.params.get("name"),
         )
@@ -315,6 +352,8 @@ def run_module():
 
     databody["saveComment"] = "Ansible API"
     result = doapi(url, http_method, mm_provider, databody)
+    if result.get("warnings"):
+        module.fail_json(msg=result["warnings"])
 
     # return collected results
     module.exit_json(**result)

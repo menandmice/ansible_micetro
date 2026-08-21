@@ -1,0 +1,33 @@
+=== menandmice.ansible_micetro.dhcpsuperscope
+
+Manage DHCP Superscope configuration on Men&Mice Micetro
+
+==== Options
+
+- `state`: The state of the superscope. (`absent`, `present`)
+- `name`: (required) Name of the DHCP superscope
+- `description`: Description of the DHCP superscope
+- `dhcp_server_ref`: (required) DHCP server reference that will own the
+  superscope
+- `dhcp_scope_refs`: References of DHCP scopes to place in the superscope
+  on creation. Only used when creating a new superscope; ignored for
+  updates.
+- `save_comment`: Save comment left in Micetro for any changes
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Examples
+
+.DHCP superscope configuration example
+[source,yaml]
+----
+- name: Manage DHCP superscope with initial scopes
+  menandmice.ansible_micetro.dhcpsuperscope:
+    state: present
+    name: My DHCP Superscope
+    dhcp_server_ref: dhcpServers/1
+    dhcp_scope_refs:
+      - dhcpScopes/1
+      - dhcpScopes/2
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

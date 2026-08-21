@@ -11,6 +11,7 @@ Module to manage DHCP scope definitions in Micetro
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = r"""
@@ -86,9 +87,9 @@ EXAMPLES = r"""
 - name: Manage DHCP scope without options using defaults
   menandmice.ansible_micetro.dhcpscope:
     name: My DHCP Scope
-    range_ref: Ranges/1
+    range_ref: ranges/1
     dhcp_server_refs:
-      - DHCPServers/1
+      - dhcpServers/1
     mm_provider:
       mm_url: http://micetro.example.net
       mm_user: apiuser
@@ -99,9 +100,9 @@ EXAMPLES = r"""
   menandmice.ansible_micetro.dhcpscope:
     state: absent
     name: My DHCP Scope
-    range_ref: Ranges/1
+    range_ref: ranges/1
     dhcp_server_refs:
-      - DHCPServers/1
+      - dhcpServers/1
     mm_provider:
       mm_url: http://micetro.example.net
       mm_user: apiuser
@@ -112,9 +113,9 @@ EXAMPLES = r"""
   menandmice.ansible_micetro.dhcpscope:
     state: present
     name: My DHCP Scope
-    range_ref: Ranges/1
+    range_ref: ranges/1
     dhcp_server_refs:
-      - DHCPServers/1
+      - dhcpServers/1
     options:
       3:
         - 1.1.1.1
@@ -131,9 +132,9 @@ EXAMPLES = r"""
     name: My DHCP Scope
     description: DHCP scope description
     enabled: true
-    range_ref: Ranges/1
+    range_ref: ranges/1
     dhcp_server_refs:
-      - DHCPServers/1
+      - dhcpServers/1
     options:
       3:
         - 1.1.1.1
@@ -157,7 +158,7 @@ message:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
-    get_single_refs
+    get_single_refs,
 )
 
 STATEBOOL = {"present": True, "absent": False}
@@ -174,7 +175,9 @@ def run_module():
             choices=["absent", "present"],
         ),
         name=dict(type="str", required=True),
-        description=dict(type="str", required=False, default="Managed via Ansible"),
+        description=dict(
+            type="str", required=False, default="Managed via Ansible"
+        ),
         enabled=dict(type="bool", required=False, default=True),
         range_ref=dict(type="str", required=True),
         dhcp_server_refs=dict(type="list", required=True, elements="str"),
@@ -227,7 +230,7 @@ def run_module():
         module.fail_json(
             msg="Range reference not found, please try again",
             range_ref=range_ref,
-            response=resp
+            response=resp,
         )
 
     # Ensure DHCP server reference(s) are present
@@ -237,21 +240,20 @@ def run_module():
             module.fail_json(
                 msg="DHCP server reference not found, please try again",
                 dhcp_server_ref=dhcp_server_ref,
-                response=resp
+                response=resp,
             )
 
     for dhcp_server_ref in dhcp_server_refs:
 
         # Look up DHCP scope
         refs = (
-            'DHCPScopes?filter=name="%s"%%20AND%%20rangeRef=%s%%20AND%%20dhcpServerRef=%s'
+            'dhcpScopes?filter=name="%s"%%20AND%%20rangeRef=%s%%20AND%%20dhcpServerRef=%s'
             % (name.replace(" ", "%20"), range_ref, dhcp_server_ref)
         )
         resp = get_single_refs(refs, mm_provider)
         if resp.get("invalid", None):
             module.fail_json(
-                msg="An error occurred, please try again",
-                response=resp
+                msg="An error occurred, please try again", response=resp
             )
 
         # Ensure no more than one DHCP scope is returned
@@ -259,7 +261,7 @@ def run_module():
         if total_results > 1:
             module.fail_json(
                 msg="More than one DHCP scope found, unable to take action",
-                response=resp
+                response=resp,
             )
 
         # Ensure DHCP scope is present
@@ -268,7 +270,7 @@ def run_module():
 
             # Create the DHCP scope if it is not found
             if total_results == 0:
-                url = "DHCPScopes"
+                url = "dhcpScopes"
                 http_method = "POST"
                 databody = {
                     "dhcpScope": {
@@ -276,24 +278,23 @@ def run_module():
                         "rangeRef": range_ref,
                         "dhcpServerRef": dhcp_server_ref,
                         "description": description,
-                        "enabled": enabled
+                        "enabled": enabled,
                     },
-                    "saveComment": save_comment
+                    "saveComment": save_comment,
                 }
 
                 api_result = doapi(url, http_method, mm_provider, databody)
                 if api_result["changed"]:
-                    result.update({
-                        "changed": True,
-                        "message": present_change_message
-                    })
+                    result.update(
+                        {"changed": True, "message": present_change_message}
+                    )
 
                 # Ensure the creation was successful
                 resp = get_single_refs(refs, mm_provider)
                 if resp["totalResults"] != 1:
                     module.fail_json(
                         msg="Creation of DHCP scope did not produce a DHCP scope, unable to take action",
-                        response=resp
+                        response=resp,
                     )
 
             # Ensure DHCP scope options are updated if necessary
@@ -302,15 +303,14 @@ def run_module():
                 formatted_options = []
                 for key, value in options.items():
                     if isinstance(value, list):
-                        value = ','.join(map(str, value))
-                    formatted_options.append({
-                        "option": "::%s" % key,
-                        "value": str(value)
-                    })
+                        value = ",".join(map(str, value))
+                    formatted_options.append(
+                        {"option": "::%s" % key, "value": str(value)}
+                    )
 
                 # Check to see if the DHCP scope options differ
                 options_needs_update = False
-                url = "%s/Options" % resp["dhcpScopes"][0]["ref"]
+                url = "%s/options" % resp["dhcpScopes"][0]["ref"]
                 option_resp = get_single_refs(url, mm_provider)
                 for formatted_option in formatted_options:
                     if formatted_option not in option_resp["dhcpOptions"]:
@@ -322,7 +322,7 @@ def run_module():
                     http_method = "PUT"
                     databody = {
                         "dhcpOptions": formatted_options,
-                        "saveComment": save_comment
+                        "saveComment": save_comment,
                     }
                     api_result = doapi(url, http_method, mm_provider, databody)
 
@@ -330,14 +330,13 @@ def run_module():
                     if api_result.get("warnings", None):
                         module.fail_json(
                             msg="DHCP scope present but failed to set options, please try again",
-                            response=api_result
+                            response=api_result,
                         )
 
                     if api_result["changed"]:
-                        result.update({
-                            "changed": True,
-                            "message": present_change_message
-                        })
+                        result.update(
+                            {"changed": True, "message": present_change_message}
+                        )
 
         # Ensure DHCP scope is absent
         if state == "absent":
@@ -349,10 +348,12 @@ def run_module():
                 http_method = "DELETE"
                 api_result = doapi(url, http_method, mm_provider, {})
                 if api_result["changed"]:
-                    result.update({
-                        "changed": True,
-                        "message": "DHCP scope successfully removed"
-                    })
+                    result.update(
+                        {
+                            "changed": True,
+                            "message": "DHCP scope successfully removed",
+                        }
+                    )
 
     # Return collected results
     module.exit_json(**result)

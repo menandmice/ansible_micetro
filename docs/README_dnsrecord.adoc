@@ -34,6 +34,9 @@ record with the updated data and remove the old one after that.
   Example: `data: "100 10 U E2U+sip !^.*$!sip:customer-service@example.com! ."`
   For MX and SRV the hostname should be the short name and not the FQDN.
 - `dnszone`: (required) The DNS zone where the action should take place.
+  If a BIND server has several views with the same zone name in each,
+  disambiguate with the Management Console's own display format,
+  `zonename (viewname)`, e.g. `example.com (internal)`.
 - `enabled`: True if the record is enabled. If the record is disabled the
   value is false
 - `name`: (required) The name of the DNS record. Can either be partially

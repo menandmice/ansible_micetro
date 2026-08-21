@@ -18,7 +18,6 @@ __metaclass__ = type
 
 # All imports
 from ansible.module_utils.basic import AnsibleModule
-from ansible.utils import unicode
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
@@ -121,6 +120,27 @@ message:
     returned: always
 """
 
+# Maps each optional module param to its API field name. Sending any of
+# these unconditionally (even as an empty string) makes MS DHCP servers
+# reject the whole reservation request outright - e.g. "Property
+# ddnsHostName is not valid for reservations on MS DHCP servers" - so
+# each one is only included in the request body when actually set.
+OPTIONAL_FIELDS = {
+    "ddnshost": "ddnsHostName",
+    "filename": "filename",
+    "servername": "serverName",
+    "nextserver": "nextServer",
+}
+
+
+def _optional_reservation_fields(module):
+    """Return only the optional reservation fields the user actually set."""
+    return {
+        api_field: module.params[param]
+        for param, api_field in OPTIONAL_FIELDS.items()
+        if module.params.get(param) is not None
+    }
+
 
 def run_module():
     """Run Ansible module."""
@@ -135,10 +155,10 @@ def run_module():
         name=dict(type="str", required=True),
         ipaddress=dict(type="list", required=True),
         macaddress=dict(type="str", required=True),
-        ddnshost=dict(type="str", required=False, default=""),
-        filename=dict(type="str", required=False, default=""),
-        servername=dict(type="str", required=False, default=""),
-        nextserver=dict(type="str", required=False, default=""),
+        ddnshost=dict(type="str", required=False),
+        filename=dict(type="str", required=False),
+        servername=dict(type="str", required=False),
+        nextserver=dict(type="str", required=False),
         deleteunspecified=dict(type="bool", required=False, default=False),
         mm_provider=dict(
             type="dict",
@@ -175,7 +195,7 @@ def run_module():
 
     for ipaddress in module.params["ipaddress"]:
         # Get the existing reservation for requested IP address
-        refs = "IPAMRecords/%s" % ipaddress
+        refs = "ipamRecords/%s" % ipaddress
         resp = get_single_refs(refs, mm_provider)
         # If the 'invalid' key exists, the request failed.
         if resp.get("invalid", None):
@@ -186,7 +206,7 @@ def run_module():
 
         scopes = get_dhcp_scopes(mm_provider, ipaddress)
         if not scopes:
-            errormsg = "No DHCP scope for IP address %s", ipaddress
+            errormsg = "No DHCP scope for IP address %s" % ipaddress
             module.fail_json(msg=errormsg)
 
         if resp["ipamRecord"]["dhcpReservations"]:
@@ -196,36 +216,19 @@ def run_module():
                 reservations = resp["ipamRecord"]["dhcpReservations"]
                 http_method = "PUT"
                 for reservation in reservations:
+                    properties = {
+                        "name": module.params["name"],
+                        "clientIdentifier": module.params["macaddress"],
+                        "addresses": ipaddress,
+                    }
+                    properties.update(_optional_reservation_fields(module))
                     databody = {
                         "ref": reservation["ref"],
                         "saveComment": "Ansible API",
                         "deleteUnspecified": module.params.get(
                             "deleteunspecified", False
                         ),
-                        "properties": [
-                            {"name": "name", "value": module.params["name"]},
-                            {
-                                "name": "clientIdentifier",
-                                "value": module.params["macaddress"],
-                            },
-                            {"name": "addresses", "value": ipaddress},
-                            {
-                                "name": "ddnsHostName",
-                                "value": module.params.get("ddnshost", ""),
-                            },
-                            {
-                                "name": "filename",
-                                "value": module.params.get("filename", ""),
-                            },
-                            {
-                                "name": "serverName",
-                                "value": module.params.get("servername", ""),
-                            },
-                            {
-                                "name": "nextServer",
-                                "value": module.params.get("nextserver", ""),
-                            },
-                        ],
+                        "properties": properties,
                     }
 
                     # Check if the requested data is equal to the current data
@@ -234,12 +237,8 @@ def run_module():
                     # not allowed, IP address needs to be a string. So that needs
                     # to be taken into consideration.
                     change = False
-                    for key in databody["properties"]:
-                        name = key["name"]
-                        val = key["value"]
-                        if name == "addresses" and isinstance(
-                            val, (str, unicode)
-                        ):
+                    for name, val in databody["properties"].items():
+                        if name == "addresses" and isinstance(val, str):
                             val = [val]
 
                         # Check if it is in the current values
@@ -263,25 +262,25 @@ def run_module():
             if module.params["state"] == "present":
                 # If IP address is a string, turn it into a list, as the API
                 # requires that
-                if isinstance(ipaddress, (str, unicode)):
+                if isinstance(ipaddress, str):
                     ipaddress = [ipaddress]
 
                 # No reservation found. Create one. Try this in each scope.
                 for scope in scopes:
                     http_method = "POST"
-                    url = "%s/DHCPReservations" % scope
+                    url = "%s/dhcpReservations" % scope
+                    dhcp_reservation = {
+                        "name": module.params["name"],
+                        "clientIdentifier": module.params["macaddress"],
+                        "reservationMethod": "HardwareAddress",
+                        "addresses": ipaddress,
+                    }
+                    dhcp_reservation.update(
+                        _optional_reservation_fields(module)
+                    )
                     databody = {
                         "saveComment": "Ansible API",
-                        "dhcpReservation": {
-                            "name": module.params["name"],
-                            "clientIdentifier": module.params["macaddress"],
-                            "reservationMethod": "HardwareAddress",
-                            "addresses": ipaddress,
-                            "ddnsHostName": module.params.get("ddnshost", ""),
-                            "filename": module.params.get("filename", ""),
-                            "serverName": module.params.get("servername", ""),
-                            "nextServer": module.params.get("nextserver", ""),
-                        },
+                        "dhcpReservation": dhcp_reservation,
                     }
 
                     # Execute the API

@@ -78,6 +78,7 @@ DOCUMENTATION = r"""
       description: True if the zone is Active Directory integrated.
       type: bool
       required: False
+      aliases: [ adintegrate ]
     adreplicationtype:
       description: Type of the AD replication.
       type: str
@@ -169,7 +170,7 @@ def run_module():
         ),
         dynamic=dict(type="bool", required=False, default=False),
         masters=dict(type="list", required=False),
-        adintegrate=dict(type="bool", required=False),
+        adintegrated=dict(type="bool", required=False, aliases=["adintegrate"]),
         adreplicationtype=dict(type="str", required=False),
         adpartition=dict(type="str", required=False),
         customproperties=dict(type="dict", required=False),
@@ -218,7 +219,7 @@ def run_module():
         module.fail_json(msg="missing required argument: nameserver")
 
     # Get the existing DNS View for the nameserver
-    refs = "DNSViews?dnsServerRef=%s" % module.params.get("nameserver")
+    refs = "dnsViews?dnsServerRef=%s" % module.params.get("nameserver")
     resp = get_single_refs(refs, mm_provider)
 
     # If the 'invalid' key exists, the request failed.
@@ -226,11 +227,11 @@ def run_module():
         module.fail_json(
             msg="nameserver does not exist: %s" % module.params["nameserver"]
         )
-    # Only the refID is needed, strip the DNSViews/ text
-    dnsview_ref = resp["dnsViews"][0]["ref"].replace("DNSViews/", "")
+    # Only the refID is needed, strip the dnsViews/ text
+    dnsview_ref = resp["dnsViews"][0]["ref"].replace("dnsViews/", "")
 
     # Try to get all zone info for this zone on this DNSView
-    refs = "DNSZones?filter=%s&dnsViewRef=%s" % (
+    refs = "dnsZones?filter=%s&dnsViewRef=%s" % (
         module.params.get("name"),
         dnsview_ref,
     )
@@ -254,63 +255,53 @@ def run_module():
     # otherwise it does and needs to be changed.
     if resp.get("totalResults", 1) != 0:
         # Zone exists. Update
+        dnszone = resp["dnsZones"][0]
 
         # Create the API call.
         #   `name`        is read-only, so not in the call
         #   `dynamicname` is read-only, so not in the call
         #   `authority`   is read-only, so not in the call
         http_method = "PUT"
-        url = "%s" % resp["dnsZone"]["ref"]
+        url = "%s" % dnszone["ref"]
         databody = {
-            "ref": resp["dnsZone"]["ref"],
+            "ref": dnszone["ref"],
             "saveComment": "Ansible API",
-            "properties": [
-                {"name": "type", "value": module.params["servtype"]}
-            ],
+            "properties": {"type": module.params["servtype"]},
         }
         # Add extra parameters, if requested.
         masters = module.params.get("masters", None)
-        if module.params["servtype"] not in ["Primary", "Master"] and masters is not None:
-            databody["properties"].append({"name": "masters", "value": masters})
-        if module.params.get("adIntegrated"):
-            databody["properties"].append(
-                {
-                    "name": "adIntegrated",
-                    "value": module.params.get("adintegrated"),
-                }
+        if (
+            module.params["servtype"] not in ["Primary", "Master"]
+            and masters is not None
+        ):
+            databody["properties"]["masters"] = masters
+        if module.params.get("adintegrated"):
+            databody["properties"]["adIntegrated"] = module.params.get(
+                "adintegrated"
             )
         if module.params.get("adreplicationtype"):
-            databody["properties"].append(
-                {
-                    "name": "adReplicationType",
-                    "value": module.params.get("adreplicationtype"),
-                }
+            databody["properties"]["adReplicationType"] = module.params.get(
+                "adreplicationtype"
             )
         if module.params.get("adpartition"):
-            databody["properties"].append(
-                {
-                    "name": "adPartition",
-                    "value": module.params.get("adpartition"),
-                }
+            databody["properties"]["adPartition"] = module.params.get(
+                "adpartition"
             )
 
         # Define all custom properties, if needed
         if module.params.get("customproperties", None):
             for key, val in module.params.get("customproperties").items():
-                databody["properties"].append({"name": key, "value": val})
+                databody["properties"][key] = val
 
         # Find out if a change is needed
         change = False
-        for key in databody["properties"]:
-            name = key["name"]
-            val = key["value"]
-
+        for name, val in databody["properties"].items():
             # Check if it is in the current values, either in the "normal" set or
             # the custom properties
-            cur = resp["dnsZone"].get(name, None)
-            if not cur:
+            cur = dnszone.get(name, None)
+            if cur is None:
                 # Not found yet, try custumprops
-                cur = resp["dnsZone"]["customProperties"].get(name, None)
+                cur = dnszone["customProperties"].get(name, None)
 
             # Check if it is in the current values
             if val != cur:
@@ -336,7 +327,10 @@ def run_module():
         }
         # Add extra parameters, if requested.
         masters = module.params.get("masters", None)
-        if module.params["servtype"] not in ["Primary", "Master"] and masters is not None:
+        if (
+            module.params["servtype"] not in ["Primary", "Master"]
+            and masters is not None
+        ):
             databody["masters"] = masters
         if module.params.get("adintegrated"):
             databody["dnsZone"]["adIntegrated"] = module.params.get(
@@ -353,10 +347,9 @@ def run_module():
 
         # Define all custom properties, if needed
         if module.params.get("customproperties", None):
-            props = []
-            for key, val in module.params.get("customproperties").items():
-                props.append({"name": key, "value": val})
-            databody["dnsZone"]["customProperties"] = props
+            databody["dnsZone"]["customProperties"] = dict(
+                module.params.get("customproperties")
+            )
 
         # Create the zone on the Micetro
         result = doapi(url, http_method, mm_provider, databody)

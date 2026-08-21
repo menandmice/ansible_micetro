@@ -1,0 +1,29 @@
+=== menandmice.ansible_micetro.dhcpaddresspool
+
+Manage DHCP Address Pool configuration on Men&Mice Micetro
+
+==== Options
+
+- `state`: The state of the DHCP address pool. (`absent`, `present`)
+- `dhcp_scope_ref`: (required) Reference of the DHCP scope that owns this
+  address pool
+- `from_address`: (required) The start address of the DHCP address pool
+- `to_address`: (required) The end address of the DHCP address pool
+- `name`: Name of the DHCP address pool
+- `save_comment`: Save comment left in Micetro for any changes
+- `mm_provider`: (required) Definition of the Men&Mice Micetro API mm_provider.
+
+==== Examples
+
+.DHCP address pool configuration example
+[source,yaml]
+----
+- name: Manage a DHCP address pool
+  menandmice.ansible_micetro.dhcpaddresspool:
+    dhcp_scope_ref: dhcpScopes/1
+    from_address: 172.16.17.100
+    to_address: 172.16.17.150
+    name: My Address Pool
+    mm_provider: "{{ mm_provider }}"
+  delegate_to: localhost
+----

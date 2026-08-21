@@ -150,7 +150,7 @@ def run_module():
     for ipaddress in module.params["ipaddress"]:
         # Get the IP address and find the reference
         # If the 'invalid' key exists, the request failed.
-        refs = "IPAMRecords/%s" % ipaddress
+        refs = "ipamRecords/%s" % ipaddress
         resp = get_single_refs(refs, mm_provider)
         if resp.get("invalid", None):
             result.pop("message", None)
@@ -193,7 +193,17 @@ def run_module():
                     change = True
                     break
             elif key in curstat["customProperties"]:
-                if curstat["customProperties"].get(key) != val:
+                # Every custom property value round-trips through the API
+                # as a string regardless of its declared type (Boolean
+                # "1"/"0", Integer "42", ...). Stringify the requested
+                # value the same way rather than parsing the read-back
+                # string into val's type.
+                curval = curstat["customProperties"].get(key)
+                if isinstance(val, bool):
+                    wantval = "1" if val else "0"
+                else:
+                    wantval = str(val)
+                if curval != wantval:
                     change = True
                     break
             else:

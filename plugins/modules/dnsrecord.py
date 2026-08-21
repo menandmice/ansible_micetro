@@ -20,6 +20,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
     doapi,
     get_single_refs,
+    resolve_dns_zone_ref,
 )
 
 DOCUMENTATION = r"""
@@ -60,7 +61,11 @@ DOCUMENTATION = r"""
       type: str
       required: True
     dnszone:
-      description: The DNS zone where the action should take place.
+      description:
+        - The DNS zone where the action should take place.
+        - If a BIND server has several views with the same zone name in
+          each, disambiguate with the Management Console's own display
+          format, C(zonename (viewname)), e.g. V(example.com (internal)).
       type: str
       required: True
     rrtype:
@@ -257,30 +262,13 @@ def run_module():
     rrtype = module.params.get("rrtype").strip().upper()
     if rrtype in RRTYPES_TAB:
         rrdata = "\t".join(rrdata.split())
-    # Zone MUST end with a '.' and I can imagine that this
-    # is forgotten
-    rrzone = module.params.get("dnszone").strip()
-    if rrzone[-1] != ".":
-        rrzone += "."
-
-    # Try to get all name of DNS Zone info
-    refs = "DNSZones?filter=%s" % rrzone
-    zoneresp = get_single_refs(refs, mm_provider)
-    if zoneresp.get("totalResults", 1) == 0:
-        # Zone does not exists
-        module.fail_json(msg="DNS Zone '%s' does not exist" % rrzone)
-
-    # find the correct zone from the returned group (could be more then one)
-    zoneref = None
-    if len(zoneresp["dnsZones"]) == 1:
-        zoneref = zoneresp["dnsZones"][0]["ref"]
-    else:
-        for zr in zoneresp["dnsZones"]:
-            if zr["name"] == rrzone:
-                if zr["type"] in ["Primary", "Master"]:
-                    if "dnsScopeName" not in zr:
-                        zoneref = zr["ref"]
-                        break
+    # dnszone can optionally disambiguate same-named zones in different
+    # DNS views the same way the Management Console displays them:
+    # "example.com (internal)".
+    zoneinfo = resolve_dns_zone_ref(module.params.get("dnszone"), mm_provider)
+    if zoneinfo.get("invalid"):
+        module.fail_json(msg=zoneinfo["warnings"])
+    zoneref = zoneinfo["ref"]
 
     # And try to get the DNS record with this data
     # DNSRecords?filter=name=host2 and type=A and data=192.168.10.11
@@ -288,7 +276,7 @@ def run_module():
     # always available). All spaces are translated into '%20'
     # (hex code for space) and tabs are replaced with '\\t' to ensure
     # the tabs reach the API ad '\t'.
-    refs = "%s/DNSRecords?filter=name=%s and type=%s and data=%s" % (
+    refs = "%s/dnsRecords?filter=name=%s and type=%s and data=%s" % (
         zoneref,
         rrname,
         rrtype,
@@ -302,7 +290,7 @@ def run_module():
     # the recordtype
     if len(iparesp.get("dnsRecords", [])) == 0:
         rrname_short = rrname.split(".")[0]
-        refs = "%s/DNSRecords?filter=name=%s and type=%s and data=%s" % (
+        refs = "%s/dnsRecords?filter=name=%s and type=%s and data=%s" % (
             zoneref,
             rrname_short,
             rrtype,
@@ -355,7 +343,7 @@ def run_module():
     if add:
         # Absent, create
         http_method = "POST"
-        url = "DNSRecords"
+        url = "dnsRecords"
         databody = {
             "saveComment": "Ansible API",
             "dnsRecords": [

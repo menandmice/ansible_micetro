@@ -6,7 +6,13 @@ Manage custom properties in Men&Mice Micetro
 
 - `cloudtags`: Associated cloud tags.
 - `defaultvalue`: Default value of the property.
-- `dest`: (required) The section where to define the custom property.
+- `dest`: (required) The section where to define the custom property. One
+  of: `dnsserver`, `dhcpserver`, `zone`, `iprange`, `ipaddress`, `device`,
+  `interface`, `cloudnet`, `cloudaccount`, `dnsrecord`, `changerequest`.
+  Several other object types (roles, users, groups, folders, DHCP
+  scopes/groups/pools, AD sites/forests, ...) expose the same kind of
+  API endpoint but reject custom properties outright when tested live —
+  they're intentionally not offered here.
 - `listitems`: The items in the selection list.
 - `mandatory`: Is the property mandatory.
 - `multiline`: Is the property multiline.

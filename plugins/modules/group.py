@@ -47,10 +47,11 @@ DOCUMENTATION = r"""
       type: str
       required: True
       aliases: [ group ]
-    descr:
+    desc:
       description: Description of the group.
       required: False
       type: str
+      aliases: [ descr ]
     users:
       description: List of users to add to this group.
       type: list
@@ -125,7 +126,7 @@ def run_module():
             choices=["absent", "present"],
         ),
         name=dict(type="str", required=True, aliases=["group"]),
-        desc=dict(type="str", required=False),
+        desc=dict(type="str", required=False, aliases=["descr"]),
         users=dict(type="list", required=False),
         roles=dict(type="list", required=False),
         mm_provider=dict(
@@ -161,29 +162,28 @@ def run_module():
     # Get all API settings
     mm_provider = module.params["mm_provider"]
 
-    # Get all groups from the Men&Mice server, start with Groups url
+    # Get all groups from the Men&Mice server, start with groups url
     state = module.params["state"]
 
     # If users are requested, get all users
     users = []
     if module.params.get("users", None):
-        resp = getrefs("Users", mm_provider)
+        resp = getrefs("users", mm_provider)
         if resp.get("warnings", None):
             module.fail_json(msg="Collecting users: %s" % resp.get("warnings"))
         users = resp["message"]["result"]["users"]
 
-    # Get list of all groups in the system
-    groups = []
-    if module.params.get("groups", None):
-        resp = getrefs("Groups", mm_provider)
-        if resp.get("warnings", None):
-            module.fail_json(msg="Collecting groups: %s" % resp.get("warnings"))
-        groups = resp["message"]["result"]["groups"]
+    # Get list of all groups in the system. Needed unconditionally to
+    # determine if the requested group already exists.
+    resp = getrefs("groups", mm_provider)
+    if resp.get("warnings", None):
+        module.fail_json(msg="Collecting groups: %s" % resp.get("warnings"))
+    groups = resp["message"]["result"]["groups"]
 
     # If roles are requested, get all roles
     roles = []
     if module.params.get("roles", None):
-        resp = getrefs("Roles", mm_provider)
+        resp = getrefs("roles", mm_provider)
         if resp.get("warnings", None):
             module.fail_json(msg="Collecting roles: %s" % resp.get("warnings"))
         roles = resp["message"]["result"]["roles"]
@@ -239,7 +239,7 @@ def run_module():
                     wanted_users.append(
                         {
                             "ref": user["ref"],
-                            "objType": "Users",
+                            "objType": "User",
                             "name": user["name"],
                         }
                     )
@@ -253,23 +253,32 @@ def run_module():
                     wanted_roles.append(
                         {
                             "ref": role["ref"],
-                            "objType": "Roles",
+                            "objType": "Role",
                             "name": role["name"],
                         }
                     )
         if group_exists:
-            # Group already present, just update.
-            http_method = "PUT"
-            url = "Groups/%s" % group_ref
-            databody = {
-                "ref": group_ref,
-                "saveComment": "Ansible API",
-                "properties": [
-                    {"name": "name", "value": module.params["name"]},
-                    {"name": "description", "value": module.params["desc"]},
-                ],
-            }
-            result = doapi(url, http_method, mm_provider, databody)
+            # Group already present. Update name/description if changed.
+            # `group_ref` is already a full ref (e.g. "groups/6"), so it
+            # is used as-is for the object's own URL.
+            change = False
+            if group_data["name"] != module.params["name"]:
+                change = True
+            if group_data["description"] != module.params["desc"]:
+                change = True
+
+            result = {"changed": False, "message": ""}
+            if change:
+                url = group_ref
+                databody = {
+                    "ref": group_ref,
+                    "saveComment": "Ansible API",
+                    "properties": {
+                        "name": module.params["name"],
+                        "description": module.params["desc"],
+                    },
+                }
+                result = doapi(url, "PUT", mm_provider, databody)
 
             # Now figure out if users or roles need to be added or deleted
             # The ones in the playbook are in `wanted_(users|roles)`
@@ -278,7 +287,7 @@ def run_module():
 
             # Add or delete a role to or from a group
             # API call with PUT or DELETE
-            # http://mandm.example.net/mmws/api/Groups/6/Roles/31
+            # http://mandm.example.net/mmws/api/v2/groups/6/roles/31
             databody = {"saveComment": "Ansible API"}
             for thisrole in wanted_roles + group_data["roles"]:
                 http_method = ""
@@ -296,12 +305,12 @@ def run_module():
                 # Execute wanted action
                 if http_method:
                     url = "%s/%s" % (group_ref, thisrole["ref"])
-                    result = doapi(url, http_method, mm_provider, databody)
+                    doapi(url, http_method, mm_provider, databody)
                     result["changed"] = True
 
-            # Add or delete a group to or from a user
+            # Add or delete a user to or from a group
             # API call with PUT or DELETE
-            # http://mandm.example.net/mmws/api/Users/31/Groups/2
+            # http://mandm.example.net/mmws/api/v2/groups/6/users/31
             for thisuser in wanted_users + group_data["groupMembers"]:
                 http_method = ""
                 if (thisuser in wanted_users) and (
@@ -318,23 +327,12 @@ def run_module():
                 # Execute wanted action
                 if http_method:
                     url = "%s/%s" % (group_ref, thisuser["ref"])
-                    result = doapi(url, http_method, mm_provider, databody)
+                    doapi(url, http_method, mm_provider, databody)
                     result["changed"] = True
-
-            # Check idempotency
-            change = False
-            if group_data["name"] != module.params["name"]:
-                change = True
-            if group_data["description"] != module.params["desc"]:
-                change = True
-
-            if change:
-                result = doapi(url, http_method, mm_provider, databody)
-            result["changed"] = change
         else:
             # Group not present, create
             http_method = "POST"
-            url = "Groups"
+            url = "groups"
             databody = {
                 "saveComment": "Ansible API",
                 "group": {
@@ -353,9 +351,10 @@ def run_module():
     # If requested state is "absent"
     if state == "absent":
         if group_exists:
-            # Group present, delete
+            # Group present, delete. `group_ref` is already a full ref
+            # (e.g. "groups/6").
             http_method = "DELETE"
-            url = "Groups/%s" % group_ref
+            url = group_ref
             databody = {"saveComment": "Ansible API"}
             result = doapi(url, http_method, mm_provider, databody)
         else:

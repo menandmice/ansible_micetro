@@ -19,6 +19,7 @@ from ansible.errors import AnsibleError, AnsibleModuleError
 from ansible.module_utils.common.text.converters import to_text
 from ansible.plugins.lookup import LookupBase
 from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro import (
+    MicetroAPIError,
     doapi,
     TRUEFALSE,
 )
@@ -178,9 +179,12 @@ class LookupModule(LookupBase):
         for network in networks:
             # Get the requested network ranges
             http_method = "GET"
-            url = "Ranges"
+            url = "ranges"
             databody = {"filter": network}
-            result = doapi(url, http_method, mm_provider, databody)
+            try:
+                result = doapi(url, http_method, mm_provider, databody)
+            except MicetroAPIError as err:
+                raise AnsibleError(str(err))
 
             # Some ranges found? If the network does not exist or when there
             # are no more IPs available an empty list is returned
@@ -197,7 +201,7 @@ class LookupModule(LookupBase):
             databody["excludeDHCP"] = excludedhcp
             if startaddress:
                 databody["startAddress"] = startaddress
-            url = "%s/NextFreeAddress" % ref
+            url = "%s/nextFreeAddress" % ref
 
             # Collect the options
             options = ""
@@ -234,7 +238,10 @@ class LookupModule(LookupBase):
 
             # Get requested number of free IP addresses
             for dummy in range(multi):
-                result = doapi(url, http_method, mm_provider, databody)
+                try:
+                    result = doapi(url, http_method, mm_provider, databody)
+                except MicetroAPIError as err:
+                    raise AnsibleError(str(err))
 
                 # If there are no more free IP Addresses, the API returns
                 # an empty result.
