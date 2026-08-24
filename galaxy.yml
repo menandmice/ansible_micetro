@@ -4,6 +4,8 @@ name: ansible_micetro
 version: 2.0.0
 readme: README.md
 authors:
+  - Armann Gudgeirsson <agudgeirsson@bluecatnetworks.com>
+  - Scott Penney <spenney@bluecatnetworks.com>
   - Ton Kersten <t.kersten@atcomputing.nl>
   - Adam Brauns (@abrauns-silex)
 description: Collection to manage the Men&Mice Micetro environment with Ansible
