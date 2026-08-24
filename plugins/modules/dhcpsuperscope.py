@@ -19,7 +19,7 @@ DOCUMENTATION = r"""
   short_description: Manage DHCP superscope(s) in the Micetro
   author:
     - BlueCat Networks
-  version_added: "1.0.15"
+  version_added: "2.0.0"
   description:
     - Create/delete DHCP superscope(s) in Micetro.
     - A DHCP superscope groups one or more DHCP scopes under a single

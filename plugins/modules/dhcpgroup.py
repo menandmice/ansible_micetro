@@ -19,7 +19,7 @@ DOCUMENTATION = r"""
   short_description: Manage DHCP group(s) in the Micetro
   author:
     - BlueCat Networks
-  version_added: "1.0.15"
+  version_added: "2.0.0"
   description:
     - Create/delete DHCP group(s) in Micetro.
     - A DHCP group is a first-class sub-object owned by a DHCP server or
