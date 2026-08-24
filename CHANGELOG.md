@@ -1,23 +1,51 @@
 # Changelog
 
-- spenney - 2026-08-06 - Version 1.0.15
-  * Migrated the collection to the Micetro v2 REST API: versioned camelCase
-    endpoints and Bearer session-token auth in `module_utils.micetro`,
-    replacing the unversioned PascalCase/Basic-Auth API and the
-    `ansible.errors` import that broke on ansible-core 2.21+
-  * Fixed several bugs found while migrating: `dhcp.py` couldn't import at
-    all (dead `ansible.utils.unicode` reference), `group.py`'s
-    `state: absent`/`present` logic always missed existing groups,
-    `zone.py` referenced a nonexistent response key, and more (see
-    GitLab issues #2-#6)
+- spenney, agudgeirsson - 2026-08-24 - Version 2.0.0
+  * Migrated the collection to the Micetro v2 REST API: versioned
+    camelCase endpoints and Bearer session-token auth in
+    `module_utils.micetro`, replacing the unversioned PascalCase/
+    Basic-Auth API and the `ansible.errors` import that broke on
+    ansible-core 2.21+
+  * Added the `dhcpsuperscope`, `dhcpaddresspool`, `dhcpgroup`, and
+    `dnsrecords` (bulk DNS record creation) modules as first-class
+    DHCP/DNS sub-objects
   * Added a unit test suite (`tests/unit`) and a functional test suite
     (`tests/functional`) that runs the real modules/lookups/inventory
-    plugin against a live Micetro host
+    plugin against a live Micetro host, and ran it against a live
+    server to find and fix further bugs
   * Expanded `props.py`'s supported `dest` types to `dnsrecord` and
     `changerequest`, the two additional object types confirmed to
     actually support custom properties
-  * Added the `dhcpsuperscope` module to manage DHCP superscopes as
-    first-class objects
+  * Fixed several bugs found while migrating: `dhcp.py` couldn't import
+    at all (dead `ansible.utils.unicode` reference), `group.py`'s
+    `state: absent`/`present` logic always missed existing groups,
+    `zone.py` referenced a nonexistent response key, and more
+  * Fixed `dhcpaddresspool.py` sending a read-only `name` field and an
+    unneeded `dhcpScopeRef` on create, which made every pool creation
+    fail outright; `name` is no longer a module option since the API
+    never allowed setting it
+  * Fixed `dhcp.py` always sending `ddnsHostName`/`filename`/`serverName`/
+    `nextServer` even when unset, which MS DHCP servers reject outright
+    ([MM-31019](https://bluecatnetworks.atlassian.net/browse/MM-31019))
+  * Fixed the `ipinfo` lookup plugin returning a bare dict instead of a
+    list, which broke `query()`
+  * Fixed `props.py` sending unsupported `cloudTags`/`listItems` and
+    swallowing create/update failures
+  * Fixed `ipprops.py` reporting `changed=true` forever for non-string
+    custom properties
+  * Added support for view-disambiguated zone names
+    (`"zonename (viewname)"`) in `dnsrecord.py`'s/`dnsrecords.py`'s
+    `dnszone` filter, for BIND servers with multiple views sharing a
+    zone name ([PM-9770](https://bluecatnetworks.atlassian.net/browse/PM-9770))
+  * Added `descr`/`adintegrate` aliases to keep backwards compatibility
+    with existing playbooks
+  * Cached Micetro session tokens on disk across module tasks in the
+    same playbook run
+  * Fixed `ansible.cfg`'s `[inventory] enable_plugins` missing `yaml`/
+    `ini`, which silently broke static inventory files once the config
+    file was actually being loaded
+  * Added a GitHub Actions workflow to publish to Ansible Galaxy
+    automatically on tag push
 
 - abrauns-silex - 2025-05-14 - Version 1.0.14
   * Fixed a minor bug when a dhcpscope contains a space in `dhcpscope` and `dhcpscope_info`

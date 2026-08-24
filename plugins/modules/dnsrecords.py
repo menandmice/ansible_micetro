@@ -19,7 +19,7 @@ DOCUMENTATION = r"""
   short_description: Create multiple DNS records in one zone in a single API call
   author:
     - BlueCat Networks
-  version_added: "1.0.15"
+  version_added: "2.0.0"
   description:
     - Create multiple DNS records in the same DNS zone with a single API call.
     - The v2 API's C(POST /dnsRecords) accepts an array of records scoped to

@@ -19,7 +19,7 @@ DOCUMENTATION = r"""
   short_description: Manage DHCP address pool(s) in the Micetro
   author:
     - BlueCat Networks
-  version_added: "1.0.15"
+  version_added: "2.0.0"
   description:
     - Create/delete DHCP address pool(s) in Micetro.
     - A DHCP address pool is a sub-range of addresses within a DHCP

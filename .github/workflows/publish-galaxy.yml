@@ -1,0 +1,49 @@
+---
+name: Publish to Ansible Galaxy
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: pip install tox
+
+      - name: Run unit tests
+        run: tox -e unit
+
+      - name: Verify galaxy.yml version matches the pushed tag
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          galaxy_version="$(python -c "import yaml; print(yaml.safe_load(open('galaxy.yml'))['version'])")"
+          if [ "$tag_version" != "$galaxy_version" ]; then
+            echo "Tag $GITHUB_REF_NAME (version $tag_version) does not match galaxy.yml's version ($galaxy_version)" >&2
+            exit 1
+          fi
+
+      - name: Install ansible-core
+        run: pip install ansible-core
+
+      - name: Build the collection
+        run: ansible-galaxy collection build --force
+
+      - name: Publish to Ansible Galaxy
+        env:
+          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
+        run: |
+          ansible-galaxy collection publish menandmice-ansible_micetro-*.tar.gz --api-key "$GALAXY_API_KEY"
