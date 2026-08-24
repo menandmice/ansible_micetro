@@ -365,8 +365,11 @@ def run_module():
         # When an IP address has status 'claimed', it cannot be assigned a
         # DNS record. The 'errors' field shows this.
         if result["message"]["result"]["errors"]:
-            result["warnings"] = result["message"]["result"]["errors"]
+            result["msg"] = result["message"]["result"]["errors"]
             result.pop("message", None)
+            result["changed"] = False
+            module.fail_json(**result)
+
     else:
         result = {"changed": False, "message": ""}
 
