@@ -311,7 +311,7 @@ def run_module():
     if module.params["state"] == "absent":
         if iparesp.get("totalResults", 1) == 0:
             # DNS record does not exist. Just return
-            result["change"] = False
+            result["changed"] = False
             module.exit_json(**result)
 
         # It does exist. Delete it
