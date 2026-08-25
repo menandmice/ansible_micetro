@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install test dependencies
-        run: pip install tox
+        run: pip install tox pyyaml
 
       - name: Run unit tests
         run: tox -e unit
