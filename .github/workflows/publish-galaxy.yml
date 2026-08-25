@@ -2,9 +2,16 @@
 name: Publish to Ansible Galaxy
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (must match galaxy.yml's version, e.g. 2.0.0)"
+        required: true
+        type: string
+  # Re-enable once manual runs are verified to work end-to-end:
+  # push:
+  #   tags:
+  #     - "v*.*.*"
 
 permissions:
   contents: read
@@ -27,12 +34,12 @@ jobs:
       - name: Run unit tests
         run: tox -e unit
 
-      - name: Verify galaxy.yml version matches the pushed tag
+      - name: Verify galaxy.yml version matches the requested version
         run: |
-          tag_version="${GITHUB_REF_NAME#v}"
+          requested_version="${{ github.event.inputs.version }}"
           galaxy_version="$(python -c "import yaml; print(yaml.safe_load(open('galaxy.yml'))['version'])")"
-          if [ "$tag_version" != "$galaxy_version" ]; then
-            echo "Tag $GITHUB_REF_NAME (version $tag_version) does not match galaxy.yml's version ($galaxy_version)" >&2
+          if [ "$requested_version" != "$galaxy_version" ]; then
+            echo "Requested version ($requested_version) does not match galaxy.yml's version ($galaxy_version)" >&2
             exit 1
           fi
 
