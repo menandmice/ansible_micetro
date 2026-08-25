@@ -8,10 +8,9 @@ on:
         description: "Version to publish (must match galaxy.yml's version, e.g. 2.0.0)"
         required: true
         type: string
-  # Re-enable once manual runs are verified to work end-to-end:
-  # push:
-  #   tags:
-  #     - "v*.*.*"
+  push:
+    tags:
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -36,7 +35,11 @@ jobs:
 
       - name: Verify galaxy.yml version matches the requested version
         run: |
-          requested_version="${{ github.event.inputs.version }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            requested_version="${{ github.event.inputs.version }}"
+          else
+            requested_version="${GITHUB_REF_NAME#v}"
+          fi
           galaxy_version="$(python -c "import yaml; print(yaml.safe_load(open('galaxy.yml'))['version'])")"
           if [ "$requested_version" != "$galaxy_version" ]; then
             echo "Requested version ($requested_version) does not match galaxy.yml's version ($galaxy_version)" >&2
